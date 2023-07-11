@@ -1,0 +1,10 @@
+{
+    "dependencies": {
+        "chokidar": "^3.5.3",
+        "neodoc": "^2.0.2",
+        "ws": "^8.13.0"
+    },
+    "engines": {
+        "node": ">= 8.0.0"
+    }
+}
