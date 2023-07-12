@@ -1,0 +1,13 @@
+body {
+    font: 13px/1.5 "Helvetica Neue", Arial, "Liberation Sans", FreeSans,
+        sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    background-color: #1d1f21;
+    width: 100%;
+    transition: opacity 0.3s;
+}
+
+.fade {
+    opacity: 0;
+}

@@ -24,12 +24,14 @@ Options:
     --expire=MIN    Keep deleted files for this many minutes before removing
                     them from memory. [default: 10]
     --help          Display this help message.
-    --index=FILE    This is the one file that the server is able to serve.
-                    When starting with "/", it is root-relative. When starting
-                    with ".", it is relative to the current working directory.
-                    Otherwise it defaults to the script's folder. This single
-                    file is served regardless of the URL.
-                    [default: index.html]
+    --frontend=DIR  Location where all frontend files are stored. This is a
+                    very simple static file server and does not support
+                    folders. If there's a request without a filename (such
+                    as "/") then this will serve "index.html". When the
+                    directory starts with "/", it is root-relative. When
+                    starting with ".", it is relative to the current
+                    working directory. Otherwise it defaults to the
+                    script's folder. [default: frontend]
     --poll          Enable polling instead of monitoring filesystem events.
     --port=PORT     Specify the HTTP server's port. If proxied, the proxy must
                     support upgrading to a WebSocket. [default: 8888]
@@ -39,17 +41,17 @@ Options:
 const args = neodoc.run(usage(), {
     laxPlacement: true
 });
-const filePath = httpServer.filePath(__dirname, args["--index"]);
+const dirPath = httpServer.dirPath(__dirname, args["--frontend"]);
 
 if (!args["--quiet"]) {
     console.log("Starting server using configuration:");
     console.log(args);
-    console.log(`Single static file: ${filePath}`);
+    console.log(`Frontend file path:: ${dirPath}`);
 }
 
 const tailTracker = new TailTracker(args["--expire"], args["--buffer"]);
 watcher.watch(args.FILE, args["--poll"], tailTracker);
-const server = httpServer.makeServer(filePath);
+const server = httpServer.makeServer(dirPath);
 wsServer.attach(server, tailTracker);
 server.listen(args["--port"]);
 
