@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 "use strict";
 
 const httpServer = require("./lib/http-server");
@@ -51,7 +53,7 @@ if (!args["--quiet"]) {
 
 const tailTracker = new TailTracker(args["--expire"], args["--buffer"]);
 watcher.watch(args.FILE, args["--poll"], tailTracker);
-const server = httpServer.makeServer(dirPath);
+const server = httpServer.makeServer(dirPath, args["--quiet"]);
 wsServer.attach(server, tailTracker);
 server.listen(args["--port"]);
 

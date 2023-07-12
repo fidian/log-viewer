@@ -1,4 +1,11 @@
 {
+    "name": "@fidian/log-viewer",
+    "version": "1.0.0",
+    "description": "Watch logs in your browser with live updates and support for filtering.",
+    "license": "MIT",
+    "bin": {
+        "log-viewer": "./server.js"
+    },
     "dependencies": {
         "chokidar": "^3.5.3",
         "neodoc": "^2.0.2",
@@ -6,5 +13,21 @@
     },
     "engines": {
         "node": ">= 8.0.0"
-    }
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fidian/log-viewer.git"
+    },
+    "homepage": "https://github.com/fidian/log-viewer",
+    "author": "Tyler Akins <fidian@rumkin.com>",
+    "contributors": [
+        "Tyler Akins <fidian@rumkin.com> (https://rumkin.com)"
+    ],
+    "keywords": [
+        "logs",
+        "logfiles",
+        "browser",
+        "websocket",
+        "tail"
+    ]
 }
