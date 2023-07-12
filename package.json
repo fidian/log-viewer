@@ -1,7 +1,6 @@
 {
     "dependencies": {
         "chokidar": "^3.5.3",
-        "minify": "^10.2.0",
         "neodoc": "^2.0.2",
         "ws": "^8.13.0"
     },
