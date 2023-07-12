@@ -1,13 +1,105 @@
-body {
-    font: 13px/1.5 "Helvetica Neue", Arial, "Liberation Sans", FreeSans,
-        sans-serif;
-    overflow: hidden;
-    height: 100vh;
-    background-color: #1d1f21;
-    width: 100%;
-    transition: opacity 0.3s;
+* {
+    border: 0 solid #000000;
+    margin: 0;
+    outline: none;
+    padding: 0;
+    zoom: 1;
+    position: relative;
+    box-sizing: border-box;
 }
 
-.fade {
-    opacity: 0;
+html {
+    height: 100vh;
+}
+
+body {
+    background-color: #1d1f21;
+    color: #888;
+    font-family: "Helvetica Neue", Arial, "Liberation Sans", FreeSans, sans-serif;
+    font-size: 13px;
+    height: 100vh;
+    line-height: 1.4;
+    line-height: 1.5;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.disconnected {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.disconnectedModal {
+    height: 100px;
+    width: 340px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-width: 1px;
+    border-color: #888;
+    background-color: #282a2e;
+}
+.connecting {
+    height: 80px;
+    display: flex;
+    justify-content: center;
+}
+
+.app {
+    font-size: 10em;
+    height: 100vh;
+}
+
+.connecting div {
+  width: 16px;
+  margin: 0 2px;
+  background: #21236b;
+  animation-duration: 1.2s;
+  animation-name: connecting;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1);
+  height: 80px;
+}
+.connecting .step1 {
+    animation-delay: 0;
+}
+.connecting .step2 {
+    animation-delay: 0.1s;
+}
+.connecting .step3 {
+    animation-delay: 0.2s;
+}
+.connecting .step4 {
+    animation-delay: 0.3s;
+}
+.connecting .step5 {
+    animation-delay: 0.4s;
+}
+.connecting .step6 {
+    animation-delay: 0.5s;
+}
+.connecting .step7 {
+    animation-delay: 0.6s;
+}
+.connecting .step8 {
+    animation-delay: 0.7s;
+}
+@keyframes connecting {
+  0% {
+    top: 8px;
+    height: 64px;
+    background-color: aqua;
+  }
+  50%,
+  100% {
+    top: 24px;
+    height: 32px;
+  }
 }
