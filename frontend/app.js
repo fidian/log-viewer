@@ -1,4 +1,4 @@
-/* global document, localStorage, m, WebSocket, window */
+/* global ansicolor, document, localStorage, m, WebSocket, window */
 "use strict";
 
 class App {
@@ -119,6 +119,12 @@ class Bridge {
 
         for (const event of events) {
             event.id = this.uniqueId;
+
+            if (ansicolor.isEscaped(event.content)) {
+                event.contentAnsi = event.content;
+                event.content = ansicolor.strip(event.contentAnsi);
+            }
+
             this.uniqueId += 1;
         }
 
@@ -199,8 +205,28 @@ class ConfigPanel {
                 this.viewPanelClose(),
                 this.viewCaseInsensitiveSearch(),
                 this.viewTimes(),
-                this.viewWrap()
+                this.viewWrap(),
+                this.viewAnsi()
             ])
+        );
+    }
+
+    viewAnsi() {
+        return m(
+            "div.configPanelLine",
+            {
+                onclick: () => {
+                    state.showAnsi = !state.showAnsi;
+
+                    return false;
+                }
+            },
+            [
+                m(Checkbox, {
+                    checked: state.showAnsi
+                }),
+                " Show ANSI text in color"
+            ]
         );
     }
 
@@ -324,7 +350,21 @@ class LogLine {
             elem += ".system";
         }
 
-        return m(elem, event.content);
+        if (!state.showAnsi || !event.contentAnsi) {
+            return m(elem, event.content);
+        }
+
+        return m(elem, this.viewContentAnsi(event));
+    }
+
+    viewContentAnsi(event) {
+        const parsed = ansicolor.parse(event.contentAnsi);
+
+        return [...parsed].map((item) =>
+            m("span", {
+                style: item.css
+            }, item.text)
+        );
     }
 
     viewDate(n) {
@@ -463,6 +503,14 @@ class State {
 
     set filter(value) {
         localStorage.setItem("filter", value);
+    }
+
+    get showAnsi() {
+        return this.readBoolean("showAnsi");
+    }
+
+    set showAnsi(value) {
+        this.writeBoolean("showAnsi", value);
     }
 
     get showTimes() {

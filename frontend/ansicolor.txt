@@ -1,0 +1,4 @@
+// Bundled with bundlejs.com
+// Use this file as the input and save the output as ansicolor.min.js
+import { default as ansicolor } from "ansicolor@1.1.100";
+window.ansicolor = ansicolor;
