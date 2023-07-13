@@ -245,7 +245,7 @@ class ConfigPanel {
                 m(Checkbox, {
                     checked: state.showTimes
                 }),
-                " Show log times"
+                " Show log ingestion times"
             ]
         );
     }
