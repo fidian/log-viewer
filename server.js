@@ -5,7 +5,7 @@
 const httpServer = require("./lib/http-server");
 const neodoc = require("neodoc");
 const TailTracker = require("./lib/tail-tracker");
-const watcher = require("./lib/watcher");
+const Watcher = require("./lib/watcher");
 const wsServer = require("./lib/ws-server");
 
 function usage() {
@@ -52,6 +52,7 @@ if (!args["--quiet"]) {
 }
 
 const tailTracker = new TailTracker(args["--expire"], args["--buffer"]);
+const watcher = new Watcher(tailTracker, args["--quiet"], args["--poll"]);
 watcher.watch(args.FILE, args["--poll"], tailTracker);
 const server = httpServer.makeServer(dirPath, args["--quiet"]);
 wsServer.attach(server, tailTracker);

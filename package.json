@@ -1,6 +1,6 @@
 {
     "name": "@fidian/log-viewer",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "description": "Watch logs in your browser with live updates and support for filtering.",
     "license": "MIT",
     "bin": {
@@ -9,6 +9,7 @@
     "dependencies": {
         "chokidar": "^3.5.3",
         "neodoc": "^2.0.2",
+        "picomatch": "^2.3.1",
         "ws": "^8.13.0"
     },
     "engines": {
