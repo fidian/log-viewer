@@ -474,10 +474,10 @@ class State {
     }
 
     writeBoolean(key, value) {
-        if (!value) {
-            localStorage.removeItem(key);
-        } else {
+        if (value) {
             localStorage.setItem(key, "1");
+        } else {
+            localStorage.removeItem(key);
         }
     }
 }
@@ -497,6 +497,7 @@ class Toolbar {
 
     viewFileList() {
         const keys = [...bridge.files.keys()];
+        keys.sort();
         const options = keys.map((key) =>
             m(
                 "option",
