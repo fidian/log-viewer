@@ -44,6 +44,7 @@ class Bridge {
         this.files = new Map();
         this.openConnection();
         this.delay = 500;
+        this.uniqueId = 0;
     }
 
     openConnection() {
@@ -114,6 +115,11 @@ class Bridge {
 
         if (!arr) {
             return;
+        }
+
+        for (const event of events) {
+            event.id = this.uniqueId;
+            this.uniqueId += 1;
         }
 
         arr.push(...events);
@@ -299,7 +305,9 @@ class LogLine {
     view(vnode) {
         const event = vnode.attrs.event;
 
-        return m("div.logEntry", [
+        return m("div.logEntry", {
+            key: `key${event.id}`
+        }, [
             this.viewWhen(event),
             this.viewContent(event)
         ]);
