@@ -182,6 +182,10 @@ body {
     white-space: pre-wrap;
     word-break: break-all;
 }
+.log.system {
+    color: #d2d209;
+    font-style: italic;
+}
 
 /* Logs */
 

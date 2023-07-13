@@ -312,6 +312,10 @@ class LogLine {
             elem += ".wrap";
         }
 
+        if (event.type === "system") {
+            elem += ".system";
+        }
+
         return m(elem, event.content);
     }
 
