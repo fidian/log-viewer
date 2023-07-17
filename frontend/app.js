@@ -154,28 +154,6 @@ class Bridge {
     }
 }
 
-class Checkbox {
-    view(vnode) {
-        if (vnode.attrs.checked) {
-            return m(
-                "span",
-                {
-                    class: "Fz(1.4em) C(w)"
-                },
-                "☑"
-            );
-        }
-
-        return m(
-            "span",
-            {
-                class: "Fz(1.4em)"
-            },
-            "☐"
-        );
-    }
-}
-
 class ConfigButton {
     view() {
         return m(
@@ -245,10 +223,10 @@ class ConfigPanel {
                 }
             },
             [
-                m(Checkbox, {
-                    checked: state.showAnsi
-                }),
-                " Show ANSI text in color"
+                m(Toggle, {
+                    checked: state.showAnsi,
+                    label: "Show ANSI text in color"
+                })
             ]
         );
     }
@@ -277,10 +255,10 @@ class ConfigPanel {
                 }
             },
             [
-                m(Checkbox, {
-                    checked: state.caseInsensitiveSearch
-                }),
-                " Case insensitive searches"
+                m(Toggle, {
+                    checked: state.caseInsensitiveSearch,
+                    label: "Case insensitive searches"
+                })
             ]
         );
     }
@@ -295,10 +273,10 @@ class ConfigPanel {
                 }
             },
             [
-                m(Checkbox, {
-                    checked: state.showTimes
-                }),
-                " Show log ingestion times"
+                m(Toggle, {
+                    checked: state.showTimes,
+                    label: "Show log ingestion times"
+                })
             ]
         );
     }
@@ -313,10 +291,10 @@ class ConfigPanel {
                 }
             },
             [
-                m(Checkbox, {
-                    checked: state.wrapLines
-                }),
-                " Wrap log lines"
+                m(Toggle, {
+                    checked: state.wrapLines,
+                    label: "Wrap log lines"
+                })
             ]
         );
     }
@@ -578,6 +556,42 @@ class State {
     }
 }
 
+class Toggle {
+    view(vnode) {
+        return m('label.Ai(c).Bdrs(100px).D(f).Fw(700)', [
+            m('input.toggleInput', {
+                type: "checkbox",
+                checked: vnode.attrs.checked
+            }),
+            m("span", {
+                class: "toggleTrack Bdw(1px) Bdc(--panel-border-color) Bdrs(100px) Cur(p) D(f) H(1.2em) W(2.4em) Ai(c)"
+            },
+                m("span", {
+                    class: "toggleIndicator Ai(c) Bdrs(1.2em) D(f) H(1em) Jc(c) L(0.1em) Ols(s) Olw(0.1em) Olc(tr) Pos(a) Trsdu(0.4s) W(1em) Bgc(--toggle-not-active-color)"
+                },
+                    m("div", {
+                        class: "checkmark Fill(--toggle-checkmark-color) H(0.8em) W(0.8em) Op(0) Trsdu(0.4s) D(f) Ai(c) Jc(c)"
+                    },
+                        m("svg", {
+                            viewBox: "0 0 24 24",
+                            role: "resentation",
+                            "aria-hidden": "true",
+                            class: "H(100%) W(100%)"
+                        },
+                            m("path", {
+                                d: "M9.86 18a1 1 0 01-.73-.32l-4.86-5.17a1.001 1.001 0 011.46-1.37l4.12 4.39 8.41-9.2a1 1 0 111.48 1.34l-9.14 10a1 1 0 01-.73.33h-.01z"
+                            })
+                        )
+                    )
+                )
+            ),
+            vnode.attrs.label ? m('span', {
+                class: "Mstart(0.8em)"
+            }, vnode.attrs.label) : null
+        ]);
+    }
+}
+
 class Toolbar {
     view() {
         return m(
@@ -624,8 +638,8 @@ class Toolbar {
 
     viewFilter() {
         return m(
-            "input.Ff(--monospace).C(--hover-button-text-color).Bgc(--button-background-color).Mx(8px).P(4px).Fxg(1).Trsdur(0.2s).Bgc(--hover-button-background-color):h",
-            {
+            "input", {
+                class: "Ff(--monospace) C(--hover-button-text-color) Bgc(--button-background-color) Mx(8px) P(4px) Fxg(1) Trsdu(0.2s) Bgc(--hover-button-background-color):h",
                 value: state.filter,
                 placeholder: "Search for text or use a /regex/",
                 oninput: (event) => {

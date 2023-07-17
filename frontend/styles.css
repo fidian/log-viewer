@@ -13,6 +13,9 @@
     --system-message-text-color: #d2d209;
     --timestamp-text-color: #5b5b70;
     --toolbar-shadow-color: #202225;
+    --toggle-not-active-color: #888;
+    --toggle-active-color: #050;
+    --toggle-checkmark-color: #ffffff;
 }
 * {
     border: 0 solid #000000;
@@ -34,6 +37,7 @@ body {
     height: 100vh;
     line-height: 1.5;
     transition-property: all;
+    transition-timing-function: ease-in-out;
     width: 100%;
 }
 .blurBackground {
@@ -60,4 +64,37 @@ body {
         top: 24px;
         height: 32px;
     }
+}
+.toggleInput {
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+.toggleInput:not([disabled]):active + .toggleTrack,
+.toggleInput:not([disabled]):focus + .toggleTrack {
+    border: 1px solid transparent;
+    box-shadow: 0px 0px 0px 2px var(--background-color);
+}
+.toggleInput:disabled + .toggleTrack {
+    cursor: not-allowed;
+    opacity: 0.7
+}
+.toggleInput:checked + .toggleTrack {
+	background-color: aqua;
+}
+.toggleInput:checked + .toggleTrack .toggleIndicator {
+    background-color: var(--toggle-active-color);
+    transform: translateX(1.2em);
+}
+.toggleInput:checked + .toggleTrack .checkmark {
+    opacity: 1;
+}
+@media screen and (-ms-high-contrast: active) {
+	.toggleTrack {
+		border-radius: 0;
+	}
 }
