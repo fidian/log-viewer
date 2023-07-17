@@ -448,14 +448,26 @@ class Logs {
             return logs;
         }
 
+        let logsFiltered;
+
         if (
             filter.charAt(0) === "/" &&
             filter.charAt(filter.length - 1) === "/"
         ) {
-            return this.filterLogsRegexp(filter, logs);
+            logsFiltered = this.filterLogsRegexp(filter, logs);
+        } else {
+            logsFiltered = this.filterLogsPlain(filter, logs);
         }
 
-        return this.filterLogsPlain(filter, logs);
+        if (logsFiltered.length) {
+            return logsFiltered;
+        }
+
+        return [{
+            when: Date.now(),
+            type: 'system',
+            content: 'No logs match the current filter'
+        }];
     }
 
     view() {
