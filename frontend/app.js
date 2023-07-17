@@ -467,12 +467,10 @@ class Logs {
             };
         });
 
-        if (
-            filter.charAt(0) === "/" &&
-            filter.charAt(filter.length - 1) === "/" &&
-            filter.length > 2
-        ) {
-            this.matchLogsRegexp(filter, logsCopy);
+        const regexp = this.makeRegexp(filter);
+
+        if (regexp) {
+            this.matchLogsRegexp(regexp, filter, logsCopy);
         } else {
             this.matchLogsPlain(filter, logsCopy);
         }
@@ -492,22 +490,29 @@ class Logs {
         ];
     }
 
-    matchLogsRegexp(pattern, logs) {
+    makeRegexp(pattern) {
+        if (pattern.length < 3 || pattern.charAt(0) !== '/' || pattern.charAt(pattern.length - 1) !== '/') {
+            return null;
+        }
+
+        const patternText = pattern.substr(1, pattern.length - 2);
+        const flags = state.caseInsensitiveSearch ? "gi" : "g";
+
         try {
-            const flags = state.caseInsensitiveSearch ? "gi" : "g";
-            const patternText = pattern.substr(1, pattern.length - 2);
-            const regexp = new RegExp(patternText, flags);
-
-            for (const event of logs) {
-                let result = regexp.exec(event.content);
-
-                while (result !== null) {
-                    event.matches.push(result.index, regexp.lastIndex);
-                    result = regexp.exec(event.content);
-                }
-            }
+            return new RegExp(patternText, flags);
         } catch (ignore) {
-            this.matchLogsPlain(pattern, logs);
+            return null;
+        }
+    }
+
+    matchLogsRegexp(regexp, pattern, logs) {
+        for (const event of logs) {
+            let result = regexp.exec(event.content);
+
+            while (result !== null) {
+                event.matches.push(result.index, regexp.lastIndex);
+                result = regexp.exec(event.content);
+            }
         }
     }
 
