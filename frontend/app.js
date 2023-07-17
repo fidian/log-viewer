@@ -462,7 +462,8 @@ class Logs {
 
         if (
             filter.charAt(0) === "/" &&
-            filter.charAt(filter.length - 1) === "/"
+            filter.charAt(filter.length - 1) === "/" &&
+            filter.length > 2
         ) {
             this.matchLogsRegexp(filter, logsCopy);
         } else {
