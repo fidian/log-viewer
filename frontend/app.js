@@ -186,10 +186,6 @@ class ConfigButton {
 }
 
 class ConfigPanel {
-    panelLine(attrs, content) {
-        return m("div.Us(n)", attrs, content);
-    }
-
     view() {
         return m(
             "div.Pos(a).T(0).L(0).W(100%).H(100vh)",
@@ -202,6 +198,9 @@ class ConfigPanel {
             },
             m(
                 "div.Pos(a).T(0).R(0).M(10px).P(10px).Bdw(1px).Bdc(--panel-border-color).Bgc(--panel-background-color)",
+                {
+                    onclick: () => false
+                },
                 [
                     this.viewPanelClose(),
                     this.viewCaseInsensitiveSearch(),
@@ -214,95 +213,86 @@ class ConfigPanel {
     }
 
     viewAnsi() {
-        return this.panelLine(
-            {
+        return m(
+            "div",
+            m(Toggle, {
+                checked: state.showAnsi,
+                label: "Show ANSI text in color",
                 onclick: () => {
                     state.showAnsi = !state.showAnsi;
 
                     return false;
                 }
-            },
-            [
-                m(Toggle, {
-                    checked: state.showAnsi,
-                    label: "Show ANSI text in color"
-                })
-            ]
+            })
         );
     }
 
     viewPanelClose() {
-        return this.panelLine(
-            {
-                class: "Ta(r)",
-                onclick: () => {
-                    state.configPanelOpen = false;
+        return m(
+            "div.D(f).Jc(fe)",
+            m(
+                "div.Cur(p)",
+                {
+                    onclick: () => {
+                        state.configPanelOpen = false;
 
-                    return false;
-                }
-            },
-            "[X]"
+                        return false;
+                    }
+                },
+                "[ Close ]"
+            )
         );
     }
 
     viewCaseInsensitiveSearch() {
-        return this.panelLine(
-            {
+        return m(
+            "div",
+            m(Toggle, {
+                checked: state.caseInsensitiveSearch,
+                label: "Case insensitive searches",
                 onclick: () => {
                     state.caseInsensitiveSearch = !state.caseInsensitiveSearch;
 
                     return false;
                 }
-            },
-            [
-                m(Toggle, {
-                    checked: state.caseInsensitiveSearch,
-                    label: "Case insensitive searches"
-                })
-            ]
+            })
         );
     }
 
     viewTimes() {
-        return this.panelLine(
-            {
+        return m(
+            "div",
+            m(Toggle, {
+                checked: state.showTimes,
+                label: "Show log ingestion times",
                 onclick: () => {
                     state.showTimes = !state.showTimes;
 
                     return false;
                 }
-            },
-            [
-                m(Toggle, {
-                    checked: state.showTimes,
-                    label: "Show log ingestion times"
-                })
-            ]
+            })
         );
     }
 
     viewWrap() {
-        return this.panelLine(
-            {
+        return m(
+            "div",
+            m(Toggle, {
+                checked: state.wrapLines,
+                label: "Wrap log lines",
                 onclick: () => {
                     state.wrapLines = !state.wrapLines;
 
                     return false;
                 }
-            },
-            [
-                m(Toggle, {
-                    checked: state.wrapLines,
-                    label: "Wrap log lines"
-                })
-            ]
+            })
         );
     }
 }
 
 class DisconnectedModal {
     bar(animationDelay) {
-        return m('div', {
+        return m("div", {
             class: `animatedConnectingBar Animdel(${animationDelay})`
         });
     }
@@ -558,45 +548,82 @@ class State {
 
 class Toggle {
     view(vnode) {
-        return m('label.Ai(c).Bdrs(100px).D(f).Fw(700)', [
-            m('input.toggleInput', {
-                type: "checkbox",
-                checked: vnode.attrs.checked
-            }),
-            m("span", {
+        return m(
+            "label.Ai(c).Bdrs(100px).D(f).Fw(700).Us(n)",
+            {
+                onclick: vnode.attrs.onclick
+            },
+            [
+                this.viewInput(vnode),
+                this.viewToggle(),
+                vnode.attrs.label
+                    ? m(
+                          "span",
+                          {
+                              class: "Mstart(0.8em)"
+                          },
+                          vnode.attrs.label
+                      )
+                    : null
+            ]
+        );
+    }
+
+    viewInput(vnode) {
+        return m("input.toggleInput", {
+            type: "checkbox",
+            checked: vnode.attrs.checked,
+            onclick: vnode.attrs.onclick
+        });
+    }
+
+    viewToggle() {
+        return m(
+            "span",
+            {
                 class: "toggleTrack Bdw(1px) Bdc(--panel-border-color) Bdrs(100px) Cur(p) D(f) H(1.2em) W(2.4em) Ai(c)"
             },
-                m("span", {
+            m(
+                "span",
+                {
                     class: "toggleIndicator Ai(c) Bdrs(1.2em) D(f) H(1em) Jc(c) L(0.1em) Ols(s) Olw(0.1em) Olc(tr) Pos(a) Trsdu(0.4s) W(1em) Bgc(--toggle-not-active-color)"
                 },
-                    m("div", {
+                m(
+                    "div",
+                    {
                         class: "checkmark Fill(--toggle-checkmark-color) H(0.8em) W(0.8em) Op(0) Trsdu(0.4s) D(f) Ai(c) Jc(c)"
                     },
-                        m("svg", {
+                    m(
+                        "svg",
+                        {
                             viewBox: "0 0 24 24",
                             role: "resentation",
                             "aria-hidden": "true",
                             class: "H(100%) W(100%)"
                         },
-                            m("path", {
-                                d: "M9.86 18a1 1 0 01-.73-.32l-4.86-5.17a1.001 1.001 0 011.46-1.37l4.12 4.39 8.41-9.2a1 1 0 111.48 1.34l-9.14 10a1 1 0 01-.73.33h-.01z"
-                            })
-                        )
+                        m("path", {
+                            d: "M9.86 18a1 1 0 01-.73-.32l-4.86-5.17a1.001 1.001 0 011.46-1.37l4.12 4.39 8.41-9.2a1 1 0 111.48 1.34l-9.14 10a1 1 0 01-.73.33h-.01z"
+                        })
                     )
                 )
-            ),
-            vnode.attrs.label ? m('span', {
-                class: "Mstart(0.8em)"
-            }, vnode.attrs.label) : null
-        ]);
+            )
+        );
     }
 }
 
 class Toolbar {
     view() {
         return m(
-            "div.W(100%).Bgc(--panel-background-color).P(5px).H(35px).D(f).Fxs(0)",
-            [this.viewFileList(), this.viewFilter(), this.viewConfigButton()]
+            "div.W(100%).Bgc(--panel-background-color).P(5px).H(35px).D(f).Fxs(0).Ai(c)",
+            [
+                this.viewFileList(),
+                this.viewGap(),
+                this.viewFilter(),
+                this.viewGap(),
+                this.viewToggleCaseSensitivity(),
+                this.viewGap(),
+                this.viewConfigButton()
+            ]
         );
     }
 
@@ -637,16 +664,32 @@ class Toolbar {
     }
 
     viewFilter() {
-        return m(
-            "input", {
-                class: "Ff(--monospace) C(--hover-button-text-color) Bgc(--button-background-color) Mx(8px) P(4px) Fxg(1) Trsdu(0.2s) Bgc(--hover-button-background-color):h",
-                value: state.filter,
-                placeholder: "Search for text or use a /regex/",
-                oninput: (event) => {
-                    state.filter = event.target.value;
-                }
+        return m("input", {
+            class: "Ff(--monospace) C(--hover-button-text-color) Bgc(--button-background-color) P(4px) Fxg(1) Trsdu(0.2s) Bgc(--hover-button-background-color):h",
+            value: state.filter,
+            placeholder: "Search for text or use a /regex/",
+            oninput: (event) => {
+                state.filter = event.target.value;
             }
-        );
+        });
+    }
+
+    viewGap() {
+        return m("div", {
+            class: "W(0.4em)"
+        });
+    }
+
+    viewToggleCaseSensitivity() {
+        return m(Toggle, {
+            checked: state.caseInsensitiveSearch,
+            label: "A=a",
+            onclick: () => {
+                state.caseInsensitiveSearch = !state.caseInsensitiveSearch;
+
+                return false;
+            }
+        });
     }
 }
 
