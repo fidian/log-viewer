@@ -26,3 +26,46 @@ There are only a handful of options, all are documented with `log-viewer --help`
 * `--poll` - Switch to polling instead of using filesystem events. Useful for network mounted drives.
 * `--port=PORT` - Specify a different port for listening.
 * `--quiet` - Suppress log messages. Errors are still printed to the screen.
+
+## Problems?
+
+* **I used a file glob but Log Viewer is not detecting the newly added files. Why not?**
+
+Most likely, the file glob was expanded by the shell.
+
+    log-viewer /var/log/nginx/*.log
+
+This will get expanded by the shell to match any files that exist when the program starts. If you want to monitor for new files that are also created, quote the glob expression.
+
+    log-viewer "/var/log/nginx/*.log"
+
+By quoting the glob, the shell does not expand the list and will pass the whole string to Log Viewer, which will perform the file matching itself.
+
+* **How can I get file globs to work?**
+
+It is most likely that the globs need to be quoted so the shell doesn't interpret them for you.
+
+    log-viewer *.txt
+
+This will use the shell to expand `*.txt` into a list of files. When new files are created, there won't be any notifications. Same for when they are removed.
+
+    log-viewer "*.txt"
+
+This is the right way to pass a glob to Log Viewer.
+
+* **How can I limit many "Ignoring" lines?**
+
+The messages indicate that files are ignored are important to limit. With some globbed paths, Chokidar (the library I used to monitor for file changes) could start recursively tracking all files in all directories under a folder. Let's look at an example invocation of Log Viewer.
+
+    log-viewer "/opt/*/*.log"
+
+This will recursively search `/opt` for *all files and directories* and track all of them in memory. This is a huge memory drain and can cause the process to crash. A far better approach is to specify the folders individually so there's no glob on a folder.
+
+    log-viewer "/opt/application/*.log" "/opt/proxy/*.log" "/opt/database/*.log"
+
+You could possibly also use shell expansion combined with glob escaping to make the command shorter.
+
+    log-viewer /opt/{application,opt,database}/\*.log
+
+With this, the shell will expand the one argument into three paths, resulting into the same command as the previous example.
+

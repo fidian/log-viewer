@@ -3,6 +3,16 @@
     --monospace: "Consolas", "Menlo", "Monaco", "Lucida Console",
         "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono",
         "Courier New", "monospace", "serif";
+    --text-color: #aaa;
+    --background-color: #1d1f21;
+    --button-background-color: #373b41;
+    --hover-button-background-color: #43484f;
+    --hover-button-text-color: #c5c8c6;
+    --panel-border-color: #888;
+    --panel-background-color: #282a2e;
+    --system-message-text-color: #d2d209;
+    --timestamp-text-color: #5b5b70;
+    --toolbar-shadow-color: #202225;
 }
 * {
     border: 0 solid #000000;
@@ -17,140 +27,27 @@ html {
     height: 100vh;
 }
 body {
-    background-color: #1d1f21;
-    color: #AAA;
+    background-color: var(--background-color);
+    color: var(--text-color);
     font-family: var(--monospace);
     font-size: 13px;
     height: 100vh;
-    line-height: 1.4;
     line-height: 1.5;
+    transition-property: all;
     width: 100%;
 }
-
-/* App */
-
-.app {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-.appDisconnected {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
+.blurBackground {
     backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
-
-/* Checkbox */
-
-.checkbox {
-    font-size: 1.4em;
-}
-.checkbox.checked {
-    color: white;
-}
-
-/* ConfigButton */
-
-.configButton {
-    background: #373b41;
-    font-size: 1.5em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0.2em;
-    transition: background-color 0.2s;
-}
-.configButton:hover {
-    background-color: #43484f;
-}
-.configButton svg {
-    width: 1em;
-    fill: #c5c8c6;
-    margin: 0 4px;
-}
-
-/* ConfigPanel */
-
-.configPanelBackdrop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-}
-.configPanel {
-    position: absolute;
-    top: 0;
-    right: 0;
-    margin: 10px;
-    padding: 10px;
-    border-width: 1px;
-    border-color: #888;
-    background-color: #282a2e;
-}
-.configPanelClose {
-    text-align: right;
-}
-.configPanelLine {
-    user-select: none;
-}
-
-/* DisconnectedModal */
-
-.disconnectedModal {
-    height: 100px;
-    width: 340px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-width: 1px;
-    border-color: #888;
-    background-color: #282a2e;
-}
-.disconnectedModal .connecting {
-    height: 80px;
-    display: flex;
-    justify-content: center;
-}
-.disconnectedModal .connecting div {
+.animatedConnectingBar {
     width: 16px;
     margin: 0 2px;
-    background: #21236b;
+    background-color: #21236b;
     animation-duration: 1.2s;
     animation-name: connecting;
     animation-iteration-count: infinite;
     animation-timing-function: cubic-bezier(0, 0.5, 0.5, 1);
     height: 80px;
-}
-.disconnectedModal .connecting .step1 {
-    animation-delay: 0;
-}
-.disconnectedModal .connecting .step2 {
-    animation-delay: 0.1s;
-}
-.disconnectedModal .connecting .step3 {
-    animation-delay: 0.2s;
-}
-.disconnectedModal .connecting .step4 {
-    animation-delay: 0.3s;
-}
-.disconnectedModal .connecting .step5 {
-    animation-delay: 0.4s;
-}
-.disconnectedModal .connecting .step6 {
-    animation-delay: 0.5s;
-}
-.disconnectedModal .connecting .step7 {
-    animation-delay: 0.6s;
-}
-.disconnectedModal .connecting .step8 {
-    animation-delay: 0.7s;
 }
 @keyframes connecting {
     0% {
@@ -163,65 +60,4 @@ body {
         top: 24px;
         height: 32px;
     }
-}
-
-/* LogLine */
-
-.logEntry {
-    display: flex;
-}
-.when {
-    flex-shrink: 0;
-    padding: 0 4px;
-    color: #5b5b70;
-}
-.log {
-    white-space: pre;
-}
-.log.wrap {
-    white-space: pre-wrap;
-    word-break: break-all;
-}
-.log.system {
-    color: #d2d209;
-    font-style: italic;
-}
-
-/* Logs */
-
-.logs {
-    flex-grow: 1;
-    overflow: auto;
-}
-
-/* Toolbar */
-
-.toolbar {
-    width: 100%;
-    background-color: #282a2e;
-    padding: 5px;
-    height: 35px;
-    display: flex;
-    flex-shrink: 0;
-}
-.toolbar .fileList {
-    font-family: var(--monospace);
-    line-height: 26px;
-    font-size: 13px;
-    color: #c5c8c6;
-    box-shadow: 2px 2px 2px 0px #202225;
-    background-color: #373b41;
-    flex-shrink: 0;
-}
-.toolbar .filter {
-    font-family: var(--monospace);
-    color: #c5c8c6;
-    background-color: #373b41;
-    margin: 0 8px;
-    padding: 0 4px;
-    flex-grow: 1;
-    transition: background-color 0.2s;
-}
-.toolbar .filter:hover {
-    background-color: #43484f;
 }

@@ -3,7 +3,7 @@
 
 class App {
     view() {
-        return m("div.app", [
+        return m("div.H(100vh).D(f).Fxd(c)", [
             this.viewToolbar(),
             this.viewLogs(),
             this.viewConfigPanel(),
@@ -24,7 +24,10 @@ class App {
             return [];
         }
 
-        return m("div.appDisconnected", m(DisconnectedModal));
+        return m(
+            "div.Pos(a).T(0).L(0).W(100%).H(100vh).blurBackground.D(f).Ai(c).Jc(c)",
+            m(DisconnectedModal)
+        );
     }
 
     viewLogs() {
@@ -154,18 +157,31 @@ class Bridge {
 class Checkbox {
     view(vnode) {
         if (vnode.attrs.checked) {
-            return m("span.checkbox.checked", "☑");
+            return m(
+                "span",
+                {
+                    class: "Fz(1.4em) C(w)"
+                },
+                "☑"
+            );
         }
 
-        return m("span.checkbox", "☐");
+        return m(
+            "span",
+            {
+                class: "Fz(1.4em)"
+            },
+            "☐"
+        );
     }
 }
 
 class ConfigButton {
     view() {
         return m(
-            "div.configButton",
+            "div",
             {
+                class: "Bgc(--button-background-color) Fz(1.5em) D(f) Jc(c) Ai(c) Bdrs(0.2em) Trsdu(0.2s) Bgc(--hover-button-background-color):h",
                 onclick: () => {
                     state.configPanelOpen = true;
 
@@ -180,8 +196,9 @@ class ConfigButton {
         return m(
             "svg",
             {
-                xmlns: "http://www.w3.org/2000/svg",
-                viewBox: "0 0 512 512"
+                class: "W(1em) Fill(--hover-button-text-color) Mx(4px)",
+                viewBox: "0 0 512 512",
+                xmlns: "http://www.w3.org/2000/svg"
             },
             m("path", {
                 d: "M507.73 109.1c-2.24-9.03-13.54-12.09-20.12-5.51l-74.36 74.36-67.88-11.31-11.31-67.88 74.36-74.36c6.62-6.62 3.43-17.9-5.66-20.16-47.38-11.74-99.55.91-136.58 37.93-39.64 39.64-50.55 97.1-34.05 147.2L18.74 402.76c-24.99 24.99-24.99 65.51 0 90.5 24.99 24.99 65.51 24.99 90.5 0l213.21-213.21c50.12 16.71 107.47 5.68 147.37-34.22 37.07-37.07 49.7-89.32 37.91-136.73zM64 472c-13.25 0-24-10.75-24-24 0-13.26 10.75-24 24-24s24 10.74 24 24c0 13.25-10.75 24-24 24z"
@@ -191,9 +208,13 @@ class ConfigButton {
 }
 
 class ConfigPanel {
+    panelLine(attrs, content) {
+        return m("div.Us(n)", attrs, content);
+    }
+
     view() {
         return m(
-            "div.configPanelBackdrop",
+            "div.Pos(a).T(0).L(0).W(100%).H(100vh)",
             {
                 onclick: () => {
                     state.configPanelOpen = false;
@@ -201,19 +222,21 @@ class ConfigPanel {
                     return false;
                 }
             },
-            m("div.configPanel", [
-                this.viewPanelClose(),
-                this.viewCaseInsensitiveSearch(),
-                this.viewTimes(),
-                this.viewWrap(),
-                this.viewAnsi()
-            ])
+            m(
+                "div.Pos(a).T(0).R(0).M(10px).P(10px).Bdw(1px).Bdc(--panel-border-color).Bgc(--panel-background-color)",
+                [
+                    this.viewPanelClose(),
+                    this.viewCaseInsensitiveSearch(),
+                    this.viewTimes(),
+                    this.viewWrap(),
+                    this.viewAnsi()
+                ]
+            )
         );
     }
 
     viewAnsi() {
-        return m(
-            "div.configPanelLine",
+        return this.panelLine(
             {
                 onclick: () => {
                     state.showAnsi = !state.showAnsi;
@@ -231,9 +254,9 @@ class ConfigPanel {
     }
 
     viewPanelClose() {
-        return m(
-            "div.configPanelClose.configPanelLine",
+        return this.panelLine(
             {
+                class: "Ta(r)",
                 onclick: () => {
                     state.configPanelOpen = false;
 
@@ -245,8 +268,7 @@ class ConfigPanel {
     }
 
     viewCaseInsensitiveSearch() {
-        return m(
-            "div.configPanelLine",
+        return this.panelLine(
             {
                 onclick: () => {
                     state.caseInsensitiveSearch = !state.caseInsensitiveSearch;
@@ -264,8 +286,7 @@ class ConfigPanel {
     }
 
     viewTimes() {
-        return m(
-            "div.configPanelLine",
+        return this.panelLine(
             {
                 onclick: () => {
                     state.showTimes = !state.showTimes;
@@ -283,8 +304,7 @@ class ConfigPanel {
     }
 
     viewWrap() {
-        return m(
-            "div.configPanelLine",
+        return this.panelLine(
             {
                 onclick: () => {
                     state.wrapLines = !state.wrapLines;
@@ -303,25 +323,31 @@ class ConfigPanel {
 }
 
 class DisconnectedModal {
+    bar(animationDelay) {
+        return m('div', {
+            class: `animatedConnectingBar Animdel(${animationDelay})`
+        });
+    }
+
     view() {
         return m(
-            "div.disconnectedModal",
-            m("div.connecting", [
-                m("div.step8"),
-                m("div.step7"),
-                m("div.step6"),
-                m("div.step5"),
-                m("div.step4"),
-                m("div.step3"),
-                m("div.step2"),
-                m("div.step1"),
-                m("div.step2"),
-                m("div.step3"),
-                m("div.step4"),
-                m("div.step5"),
-                m("div.step6"),
-                m("div.step7"),
-                m("div.step8")
+            "div.H(100px).W(340px).D(f).Jc(c).Ai(c).Bdw(1px).Bdc(--panel-border-color).Bgc(--panel-background-color)",
+            m("div.H(80px).D(f).Jc(c)", [
+                this.bar("0.7s"),
+                this.bar("0.6s"),
+                this.bar("0.5s"),
+                this.bar("0.4s"),
+                this.bar("0.3s"),
+                this.bar("0.2s"),
+                this.bar("0.1s"),
+                this.bar("0.0s"),
+                this.bar("0.1s"),
+                this.bar("0.2s"),
+                this.bar("0.3s"),
+                this.bar("0.4s"),
+                this.bar("0.5s"),
+                this.bar("0.6s"),
+                this.bar("0.7s")
             ])
         );
     }
@@ -331,23 +357,26 @@ class LogLine {
     view(vnode) {
         const event = vnode.attrs.event;
 
-        return m("div.logEntry", {
-            key: `key${event.id}`
-        }, [
-            this.viewWhen(event),
-            this.viewContent(event)
-        ]);
+        return m(
+            "div.D(f)",
+            {
+                key: `key${event.id}`
+            },
+            [this.viewWhen(event), this.viewContent(event)]
+        );
     }
 
     viewContent(event) {
-        let elem = "div.log";
-
-        if (state.wrapLines) {
-            elem += ".wrap";
-        }
+        let elem = "div";
 
         if (event.type === "system") {
-            elem += ".system";
+            elem += ".C(--system-message-text-color).Fs(i)";
+        }
+
+        if (state.wrapLines) {
+            elem += ".Whs(pw).Wob(ba)";
+        } else {
+            elem += ".Whs(p)";
         }
 
         if (!state.showAnsi || !event.contentAnsi) {
@@ -361,9 +390,13 @@ class LogLine {
         const parsed = ansicolor.parse(event.contentAnsi);
 
         return [...parsed].map((item) =>
-            m("span", {
-                style: item.css
-            }, item.text)
+            m(
+                "span",
+                {
+                    style: item.css
+                },
+                item.text
+            )
         );
     }
 
@@ -387,7 +420,10 @@ class LogLine {
             return [];
         }
 
-        return m("div.when", this.viewDate(event.when));
+        return m(
+            "div.Fxs(0).Px(4px).C(--timestamp-text-color)",
+            this.viewDate(event.when)
+        );
     }
 }
 
@@ -458,7 +494,7 @@ class Logs {
         const logs = this.getLogs();
 
         return m(
-            "div.logs",
+            "div.Fxg(1).Ov(a)",
             logs.map((event) => {
                 return m(LogLine, {
                     event
@@ -544,11 +580,10 @@ class State {
 
 class Toolbar {
     view() {
-        return m("div.toolbar", [
-            this.viewFileList(),
-            this.viewFilter(),
-            this.viewConfigButton()
-        ]);
+        return m(
+            "div.W(100%).Bgc(--panel-background-color).P(5px).H(35px).D(f).Fxs(0)",
+            [this.viewFileList(), this.viewFilter(), this.viewConfigButton()]
+        );
     }
 
     viewConfigButton() {
@@ -574,7 +609,7 @@ class Toolbar {
         }
 
         return m(
-            "select.fileList",
+            "select.Ff(--monospace).Lh(26px).Fz(13px).C(--hover-button-text-color).Bxsh(2px,2px,2px,0px,--toolbar-shadow-color).Bgc(--button-background-color).Fs(0)",
             {
                 value: state.filename,
                 onchange: (event) => {
@@ -588,13 +623,16 @@ class Toolbar {
     }
 
     viewFilter() {
-        return m("input.filter", {
-            value: state.filter,
-            placeholder: "Search for text or use a /regex/",
-            oninput: (event) => {
-                state.filter = event.target.value;
+        return m(
+            "input.Ff(--monospace).C(--hover-button-text-color).Bgc(--button-background-color).Mx(8px).P(4px).Fxg(1).Trsdur(0.2s).Bgc(--hover-button-background-color):h",
+            {
+                value: state.filter,
+                placeholder: "Search for text or use a /regex/",
+                oninput: (event) => {
+                    state.filter = event.target.value;
+                }
             }
-        });
+        );
     }
 }
 
