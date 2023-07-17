@@ -217,7 +217,7 @@ class ConfigPanel {
             "div",
             m(Toggle, {
                 checked: state.showAnsi,
-                label: "Show ANSI text in color",
+                label: "Show ANSI text in color when not filtering",
                 onclick: () => {
                     state.showAnsi = !state.showAnsi;
 
@@ -347,11 +347,15 @@ class LogLine {
             elem += ".Whs(p)";
         }
 
-        if (!state.showAnsi || !event.contentAnsi) {
-            return m(elem, event.content);
+        if (state.showAnsi && event.contentAnsi) {
+            return m(elem, this.viewContentAnsi(event));
         }
 
-        return m(elem, this.viewContentAnsi(event));
+        if (event.matches) {
+            return m(elem, this.viewHighlight(event));
+        }
+
+        return m(elem, event.content);
     }
 
     viewContentAnsi(event) {
@@ -381,6 +385,28 @@ class LogLine {
             d.getSeconds(),
             2
         )}.${pad(d.getMilliseconds(), 3)}`;
+    }
+
+    viewHighlight(event) {
+        let start = 0;
+        const elements = [];
+
+        while (event.matches.length) {
+            const plainIndex = event.matches.shift();
+            elements.push(event.content.substr(start, plainIndex));
+            const highlightIndex = event.matches.shift();
+            elements.push(
+                m(
+                    "span.Bgc(--highlight-background-color).C(--highlight-text-color)",
+                    event.content.substring(plainIndex, highlightIndex)
+                )
+            );
+            start = highlightIndex;
+        }
+
+        elements.push(event.content.substring(start, event.content.length));
+
+        return elements;
     }
 
     viewWhen(event) {
@@ -415,31 +441,6 @@ class Logs {
         }
     }
 
-    filterLogsRegexp(pattern, logs) {
-        const flags = state.caseInsensitiveSearch ? "i" : "";
-
-        try {
-            const patternText = pattern.substr(1, pattern.length - 2);
-            const regexp = new RegExp(patternText, flags);
-
-            return logs.filter((event) => regexp.test(event.content));
-        } catch (ignore) {
-            return this.filterLogsPlain(pattern, logs);
-        }
-    }
-
-    filterLogsPlain(text, logs) {
-        if (state.caseInsensitiveSearch) {
-            text = text.toLowerCase();
-
-            return logs.filter(
-                (event) => event.content.toLowerCase().indexOf(text) >= 0
-            );
-        }
-
-        return logs.filter((event) => event.content.indexOf(text) >= 0);
-    }
-
     getLogs() {
         const logs = bridge.files.get(state.filename) || [];
         const filter = state.filter;
@@ -448,26 +449,83 @@ class Logs {
             return logs;
         }
 
-        let logsFiltered;
+        const logsCopy = logs.map((event) => {
+            // Copy event and set an empty matches array.
+            // Remove the ANSI version so highlighting works
+            return {
+                type: event.type,
+                when: event.when,
+                content: event.content,
+                matches: []
+            };
+        });
 
         if (
             filter.charAt(0) === "/" &&
             filter.charAt(filter.length - 1) === "/"
         ) {
-            logsFiltered = this.filterLogsRegexp(filter, logs);
+            this.matchLogsRegexp(filter, logsCopy);
         } else {
-            logsFiltered = this.filterLogsPlain(filter, logs);
+            this.matchLogsPlain(filter, logsCopy);
         }
+
+        const logsFiltered = logsCopy.filter((event) => event.matches.length);
 
         if (logsFiltered.length) {
             return logsFiltered;
         }
 
-        return [{
-            when: Date.now(),
-            type: 'system',
-            content: 'No logs match the current filter'
-        }];
+        return [
+            {
+                when: Date.now(),
+                type: "system",
+                content: "No logs match the current filter"
+            }
+        ];
+    }
+
+    matchLogsRegexp(pattern, logs) {
+        try {
+            const flags = state.caseInsensitiveSearch ? "gi" : "g";
+            const patternText = pattern.substr(1, pattern.length - 2);
+            const regexp = new RegExp(patternText, flags);
+
+            for (const event of logs) {
+                let result = regexp.exec(event.content);
+
+                while (result !== null) {
+                    event.matches.push(result.index, regexp.lastIndex);
+                    result = regexp.exec(event.content);
+                }
+            }
+        } catch (ignore) {
+            this.matchLogsPlain(pattern, logs);
+        }
+    }
+
+    matchLogsPlain(text, logs) {
+        const match = (content, matches) => {
+            let start = 0;
+            let index = content.indexOf(text);
+
+            while (index >= 0) {
+                matches.push(index, index + text.length);
+                start = index + text.length + 1;
+                index = content.indexOf(text, start);
+            }
+        };
+
+        if (state.caseInsensitiveSearch) {
+            text = text.toLowerCase();
+
+            for (const event of logs) {
+                match(event.content.toLowerCase(), event.matches);
+            }
+        } else {
+            for (const event of logs) {
+                match(event.content, event.matches);
+            }
+        }
     }
 
     view() {
@@ -572,7 +630,7 @@ class Toggle {
                     ? m(
                           "span",
                           {
-                              class: "Mstart(0.8em)"
+                              class: "Mstart(0.4em)"
                           },
                           vnode.attrs.label
                       )

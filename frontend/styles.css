@@ -16,6 +16,8 @@
     --toggle-not-active-color: #888;
     --toggle-active-color: #050;
     --toggle-checkmark-color: #ffffff;
+    --highlight-background-color: yellow;
+    --highlight-text-color: black;
 }
 * {
     border: 0 solid #000000;
@@ -66,13 +68,13 @@ body {
     }
 }
 .toggleInput {
-	clip: rect(0 0 0 0);
-	clip-path: inset(50%);
-	height: 1px;
-	overflow: hidden;
-	position: absolute;
-	white-space: nowrap;
-	width: 1px;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
 }
 .toggleInput:not([disabled]):active + .toggleTrack,
 .toggleInput:not([disabled]):focus + .toggleTrack {
@@ -81,10 +83,10 @@ body {
 }
 .toggleInput:disabled + .toggleTrack {
     cursor: not-allowed;
-    opacity: 0.7
+    opacity: 0.7;
 }
 .toggleInput:checked + .toggleTrack {
-	background-color: aqua;
+    background-color: aqua;
 }
 .toggleInput:checked + .toggleTrack .toggleIndicator {
     background-color: var(--toggle-active-color);
@@ -94,7 +96,7 @@ body {
     opacity: 1;
 }
 @media screen and (-ms-high-contrast: active) {
-	.toggleTrack {
-		border-radius: 0;
-	}
+    .toggleTrack {
+        border-radius: 0;
+    }
 }
