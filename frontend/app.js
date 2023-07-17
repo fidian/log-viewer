@@ -390,21 +390,28 @@ class LogLine {
     viewHighlight(event) {
         let start = 0;
         const elements = [];
+        let nextIsText = true;
+        const append = (segment) => {
+            if (nextIsText) {
+                elements.push(segment);
+            } else {
+                elements.push(
+                    m(
+                        "span.Bgc(--highlight-background-color).C(--highlight-text-color)",
+                        segment
+                    )
+                );
+            }
 
-        while (event.matches.length) {
-            const plainIndex = event.matches.shift();
-            elements.push(event.content.substr(start, plainIndex));
-            const highlightIndex = event.matches.shift();
-            elements.push(
-                m(
-                    "span.Bgc(--highlight-background-color).C(--highlight-text-color)",
-                    event.content.substring(plainIndex, highlightIndex)
-                )
-            );
-            start = highlightIndex;
+            nextIsText = !nextIsText;
+        };
+
+        for (const match of event.matches) {
+            append(event.content.substring(start, match));
+            start = match;
         }
 
-        elements.push(event.content.substring(start, event.content.length));
+        append(event.content.substring(start, event.content.length));
 
         return elements;
     }
