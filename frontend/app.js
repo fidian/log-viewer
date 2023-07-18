@@ -252,6 +252,7 @@ class ConfigPanel {
                 label: "Case insensitive searches",
                 onclick: () => {
                     state.caseInsensitiveSearch = !state.caseInsensitiveSearch;
+                    filter.updateFilter();
 
                     return false;
                 }
@@ -321,6 +322,112 @@ class DisconnectedModal {
     }
 }
 
+class Filter {
+    constructor() {
+        this.text = '';
+        this.valid = true;
+        this.buildEmptyMatcher();
+    }
+
+    applyFilter(events) {
+        if (!this.valid || !this.text) {
+            return events;
+        }
+
+        return events.filter(this.matcher);
+    }
+
+    buildEmptyMatcher() {
+        this.matcher = (event) => {
+            delete event.highlightRanges;
+
+            return true;
+        };
+    }
+
+    buildRegexpMatcher() {
+        const patternText = this.text.substr(1, this.text.length - 2);
+        const flags = state.caseInsensitiveSearch ? "gi" : "g";
+
+        try {
+            const regexp = new RegExp(patternText, flags);
+
+            this.matcher = (event) => {
+                event.highlightRanges = this.matchRegexp(regexp, event.content);
+
+                return event.highlightRanges.length > 0;
+            };
+        } catch (ignore) {
+            this.matcher = (event) => {
+                delete event.highlightRanges;
+
+                return false;
+            };
+            this.valid = false;
+            setTimeout(() => m.redraw());
+        }
+    }
+
+    buildTextMatcher() {
+        this.matcher = (event) => {
+            event.highlightRanges = this.matchText(this.text.toLowerCase(), event.content.toLowerCase());
+
+            return event.highlightRanges.length > 0;
+        };
+    }
+
+    matchRegexp(needle, haystack) {
+        let result = needle.exec(haystack);
+        const matches = [];
+
+        while (result !== null) {
+            if (needle.lastIndex === result.index) {
+                return [];
+            }
+
+            matches.push(result.index, needle.lastIndex);
+            result = needle.exec(haystack);
+        }
+
+        return matches;
+    }
+
+    matchText(needle, haystack) {
+        if (state.caseInsensitiveSearch) {
+            needle = needle.toLowerCase();
+            haystack = haystack.toLowerCase();
+        }
+
+        const matches = [];
+        let start = 0;
+        let index = haystack.indexOf(needle);
+
+        while (index >= 0) {
+            matches.push(index, index + needle.length);
+            start = index + needle.length + 1;
+            index = haystack.indexOf(needle, start);
+        }
+
+        return matches;
+    }
+
+    setFilter(str) {
+        this.text = str.trim();
+        this.valid = true;
+        this.updateFilter();
+    }
+
+    updateFilter() {
+        if (this.text.charAt(0) === '/' && this.text.charAt(this.text.length - 1) === '/' && this.text.length > 2) {
+            this.buildRegexpMatcher();
+        } else if (this.text.length) {
+            this.buildTextMatcher();
+        } else {
+            this.buildEmptyMatcher();
+        }
+    }
+}
+
 class LogLine {
     view(vnode) {
         const event = vnode.attrs.event;
@@ -351,7 +458,7 @@ class LogLine {
             return m(elem, this.viewContentAnsi(event));
         }
 
-        if (event.matches) {
+        if (event.highlightRanges) {
             return m(elem, this.viewHighlight(event));
         }
 
@@ -406,9 +513,9 @@ class LogLine {
             nextIsText = !nextIsText;
         };
 
-        for (const match of event.matches) {
-            append(event.content.substring(start, match));
-            start = match;
+        for (const index of event.highlightRanges) {
+            append(event.content.substring(start, index));
+            start = index;
         }
 
         append(event.content.substring(start, event.content.length));
@@ -448,97 +555,18 @@ class Logs {
         }
     }
 
+    emptyResultMessage() {
+        return {
+            when: Date.now(),
+            type: "system",
+            content: "No logs match the current filter"
+        };
+    }
+
     getLogs() {
         const logs = bridge.files.get(state.filename) || [];
-        const filter = state.filter;
 
-        if (!filter) {
-            return logs;
-        }
-
-        const logsCopy = logs.map((event) => {
-            // Copy event and set an empty matches array.
-            // Remove the ANSI version so highlighting works
-            return {
-                type: event.type,
-                when: event.when,
-                content: event.content,
-                matches: []
-            };
-        });
-
-        const regexp = this.makeRegexp(filter);
-
-        if (regexp) {
-            this.matchLogsRegexp(regexp, filter, logsCopy);
-        } else {
-            this.matchLogsPlain(filter, logsCopy);
-        }
-
-        const logsFiltered = logsCopy.filter((event) => event.matches.length);
-
-        if (logsFiltered.length) {
-            return logsFiltered;
-        }
-
-        return [
-            {
-                when: Date.now(),
-                type: "system",
-                content: "No logs match the current filter"
-            }
-        ];
-    }
-
-    makeRegexp(pattern) {
-        if (pattern.length < 3 || pattern.charAt(0) !== '/' || pattern.charAt(pattern.length - 1) !== '/') {
-            return null;
-        }
-
-        const patternText = pattern.substr(1, pattern.length - 2);
-        const flags = state.caseInsensitiveSearch ? "gi" : "g";
-
-        try {
-            return new RegExp(patternText, flags);
-        } catch (ignore) {
-            return null;
-        }
-    }
-
-    matchLogsRegexp(regexp, pattern, logs) {
-        for (const event of logs) {
-            let result = regexp.exec(event.content);
-
-            while (result !== null) {
-                event.matches.push(result.index, regexp.lastIndex);
-                result = regexp.exec(event.content);
-            }
-        }
-    }
-
-    matchLogsPlain(text, logs) {
-        const match = (content, matches) => {
-            let start = 0;
-            let index = content.indexOf(text);
-
-            while (index >= 0) {
-                matches.push(index, index + text.length);
-                start = index + text.length + 1;
-                index = content.indexOf(text, start);
-            }
-        };
-
-        if (state.caseInsensitiveSearch) {
-            text = text.toLowerCase();
-
-            for (const event of logs) {
-                match(event.content.toLowerCase(), event.matches);
-            }
-        } else {
-            for (const event of logs) {
-                match(event.content, event.matches);
-            }
-        }
+        return filter.applyFilter(logs);
     }
 
     view() {
@@ -582,14 +610,6 @@ class State {
 
     set filename(value) {
         localStorage.setItem("filename", value);
-    }
-
-    get filter() {
-        return localStorage.getItem("filter");
-    }
-
-    set filter(value) {
-        localStorage.setItem("filter", value);
     }
 
     get showAnsi() {
@@ -747,12 +767,15 @@ class Toolbar {
     }
 
     viewFilter() {
+        const extra = filter.valid ? 'Bgc(--button-background-color) Bgc(--hover-button-background-color):h' : 'Bgc(--invalid-filter-background-color) Bgc(--hover-invalid-filter-background-color):h';
+
         return m("input", {
-            class: "Ff(--monospace) C(--hover-button-text-color) Bgc(--button-background-color) P(4px) Fxg(1) Trsdu(0.2s) Bgc(--hover-button-background-color):h",
+            class: `Ff(--monospace) C(--hover-button-text-color) P(4px) Fxg(1) Trsdu(0.2s) ${extra}`,
             value: state.filter,
             placeholder: "Search for text or use a /regex/",
             oninput: (event) => {
                 state.filter = event.target.value;
+                filter.setFilter(event.target.value);
             }
         });
     }
@@ -769,6 +792,7 @@ class Toolbar {
             label: "A=a",
             onclick: () => {
                 state.caseInsensitiveSearch = !state.caseInsensitiveSearch;
+                filter.updateFilter();
 
                 return false;
             }
@@ -778,9 +802,11 @@ class Toolbar {
 
 let bridge;
 let state;
+let filter;
 
 window.addEventListener("load", () => {
     document.getElementsByTagName("body")[0].classList.remove("fade");
+    filter = new Filter();
     state = new State();
     bridge = new Bridge();
     bridge.watching.add(state.filename);
