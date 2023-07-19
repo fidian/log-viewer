@@ -13,35 +13,19 @@ function determineTokenType(token) {
             token.groupMatch = ")";
             break;
 
-        case "[":
-            token.groupOpen = true;
-            token.groupMatch = "]";
-            break;
-
-        case "{":
-            token.groupOpen = true;
-            token.groupMatch = "}";
-            break;
-
         case ")":
-        case "]":
-        case "}":
             token.groupClose = true;
             break;
 
         case "not":
-        case "!":
-        case "-":
             token.not = true;
             break;
 
         case "and":
-        case "&":
             token.and = true;
             break;
 
         case "or":
-        case "|":
             token.or = true;
             break;
     }
@@ -87,7 +71,7 @@ function readToken(query, pos) {
 
     // Do not use hyphen here as a separator. Only allow it as an operator at
     // the beginning of a term
-    while (c.length && " \n\r\t\f\v()[]{}|&!".indexOf(c) === -1) {
+    while (c.length && " \n\r\t\f\v()".indexOf(c) === -1) {
         result += c;
         pos += 1;
         c = query.charAt(pos);
@@ -124,7 +108,6 @@ function parseQueryToTokens(query) {
                 break;
 
             case '"':
-            case "'":
                 result = readString(query, pos);
                 tokens.push(result.token);
                 pos = result.pos;
@@ -132,14 +115,6 @@ function parseQueryToTokens(query) {
 
             case "(":
             case ")":
-            case "[":
-            case "]":
-            case "{":
-            case "}":
-            case "!":
-            case "-":
-            case "&":
-            case "|":
                 tokens.push(
                     determineTokenType({
                         term: c,
@@ -177,10 +152,11 @@ function applyNegated(node) {
         if (node.right) {
             applyNegated(node.right);
 
-            if (node.operation === "AND") {
-                node.operation = "OR";
-            } else {
+            if (node.operation === "OR") {
                 node.operation = "AND";
+            } else {
+                // both '<implicit>' and 'AND'
+                node.operation = "OR";
             }
         }
     } else {
