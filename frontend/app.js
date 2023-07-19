@@ -409,10 +409,6 @@ class Filter {
     }
 
     applyFilter(events) {
-        if (!this.valid || !this.text) {
-            return events;
-        }
-
         return events.filter(this.matcher);
     }
 
