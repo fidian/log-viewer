@@ -420,7 +420,13 @@ class Filter {
         }
 
         try {
-            const query = simpleQuery(this.text, {
+            let text = this.text;
+
+            if (text.match(/[a-z0-9]$/i)) {
+                text += '*';
+            }
+
+            const query = simpleQuery(text, {
                 caseInsensitive: state.caseInsensitiveSearch,
                 returnPositions: true
             });
