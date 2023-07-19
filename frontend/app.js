@@ -85,6 +85,14 @@ class Bridge {
         this.uniqueId = 0;
     }
 
+    adjustBufferLines(lines) {
+        for (const arr of this.files.values()) {
+            while (arr.length > lines) {
+                arr.shift();
+            }
+        }
+    }
+
     openConnection() {
         this.webSocket = new WebSocket(this.url);
         this.webSocket.onopen = () => {
@@ -168,7 +176,7 @@ class Bridge {
 
         arr.push(...events);
 
-        while (arr.length > 2000) {
+        while (arr.length > state.bufferLines) {
             arr.shift();
         }
 
@@ -242,7 +250,8 @@ class ConfigPanel {
                     this.viewCaseInsensitiveSearch(),
                     this.viewTimes(),
                     this.viewWrap(),
-                    this.viewAnsi()
+                    this.viewAnsi(),
+                    this.viewBufferLines()
                 ]
             )
         );
@@ -276,6 +285,23 @@ class ConfigPanel {
                 }
             })
         );
+    }
+
+    viewBufferLines() {
+        return m(
+            "div", m("label.D(f).Jc(spb)", [
+                m("span.Mend(4px)", "Scrollback buffer size"),
+                    m("input.W(5em).Ta(end)", {
+                        value: state.bufferLines,
+                        type: "number",
+                        oninput: (event) => {
+                            state.bufferLines = +event.target.value;
+                            bridge.adjustBufferLines(state.bufferLines);
+
+                            return false;
+                        }
+                    })
+            ]));
     }
 
     viewPanelClose() {
@@ -489,7 +515,11 @@ class Filter {
 
             if (result && result.length) {
                 const json = JSON.stringify(result);
-                matches.push([obj.start, obj.end, json.substr(1, json.length - 2)]);
+                matches.push([
+                    obj.start,
+                    obj.end,
+                    json.substr(1, json.length - 2)
+                ]);
             }
         } catch (ignore) {
             return;
@@ -544,7 +574,7 @@ class Filter {
             this.text.length > 2
         ) {
             this.buildRegexpMatcher();
-        } else if (this.text.charAt(0) === '|') {
+        } else if (this.text.charAt(0) === "|") {
             this.buildJqMatcher();
         } else if (state.advancedSearches) {
             this.buildAdvancedTextMatcher();
@@ -647,7 +677,12 @@ class LogLine {
             elements.push(event.content.substring(start, range[0]));
 
             if (range.length > 2) {
-                elements.push(m("span.Bgc(--replace-background-color).C(--replace-text-color)", range[2]));
+                elements.push(
+                    m(
+                        "span.Bgc(--replace-background-color).C(--replace-text-color)",
+                        range[2]
+                    )
+                );
             } else {
                 elements.push(
                     m(
@@ -736,6 +771,14 @@ class State {
 
     set advancedSearches(value) {
         this.writeBoolean("advancedSearches", value);
+    }
+
+    get bufferLines() {
+        return +localStorage.getItem("bufferLines") || 2000;
+    }
+
+    set bufferLines(value) {
+        localStorage.setItem("bufferLines", value.toString());
     }
 
     get caseInsensitiveSearch() {
@@ -925,7 +968,7 @@ class Toolbar {
             : "Search for an exact string";
 
         return m("input", {
-            id: 'initialFocus',
+            id: "initialFocus",
             class: `Ff(--monospace) C(--hover-button-text-color) P(4px) Fxg(1) Trsdu(0.2s) ${extra}`,
             value: state.filter,
             placeholder: `${searchPlaceholder}, use a /regex/, or |jq`,
@@ -967,5 +1010,5 @@ window.addEventListener("load", () => {
     bridge = new Bridge();
     bridge.watching.add(state.filename);
     m.mount(document.body, App);
-    setTimeout(() => document.getElementById('initialFocus').focus());
+    setTimeout(() => document.getElementById("initialFocus").focus());
 });
