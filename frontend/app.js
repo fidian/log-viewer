@@ -289,19 +289,21 @@ class ConfigPanel {
 
     viewBufferLines() {
         return m(
-            "div", m("label.D(f).Jc(spb)", [
+            "div",
+            m("label.D(f).Jc(spb)", [
                 m("span.Mend(4px)", "Scrollback buffer size"),
-                    m("input.W(5em).Ta(end)", {
-                        value: state.bufferLines,
-                        type: "number",
-                        oninput: (event) => {
-                            state.bufferLines = +event.target.value;
-                            bridge.adjustBufferLines(state.bufferLines);
+                m("input.W(5em).Ta(end)", {
+                    value: state.bufferLines,
+                    type: "number",
+                    oninput: (event) => {
+                        state.bufferLines = +event.target.value;
+                        bridge.adjustBufferLines(state.bufferLines);
 
-                            return false;
-                        }
-                    })
-            ]));
+                        return false;
+                    }
+                })
+            ])
+        );
     }
 
     viewPanelClose() {

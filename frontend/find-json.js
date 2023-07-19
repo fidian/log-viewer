@@ -4,8 +4,8 @@
 
 window.findJson = function (stringToTest) {
     function findNextOpeningIndex(str, start) {
-        const brace = str.indexOf('{', start);
-        const bracket = str.indexOf('[', start);
+        const brace = str.indexOf("{", start);
+        const bracket = str.indexOf("[", start);
 
         if (brace === -1) {
             return bracket;
@@ -22,11 +22,11 @@ window.findJson = function (stringToTest) {
         let c = str.charAt(pos);
 
         while (c !== '"') {
-            if (c === '') {
+            if (c === "") {
                 return -1;
             }
 
-            if (c === '\\') {
+            if (c === "\\") {
                 pos += 2;
             } else {
                 pos += 1;
@@ -42,11 +42,11 @@ window.findJson = function (stringToTest) {
         let depth = 0;
         let c = str.charAt(pos);
 
-        while (c !== '') {
-            if (c === '{' || c === '[') {
+        while (c !== "") {
+            if (c === "{" || c === "[") {
                 depth += 1;
                 pos += 1;
-            } else if (c === '}' || c === ']') {
+            } else if (c === "}" || c === "]") {
                 depth -= 1;
                 pos += 1;
             } else if (c === '"') {

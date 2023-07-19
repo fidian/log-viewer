@@ -10,17 +10,17 @@ function determineTokenType(token) {
     switch (token.term.toLowerCase()) {
         case "(":
             token.groupOpen = true;
-            token.groupMatch = ')';
+            token.groupMatch = ")";
             break;
 
         case "[":
             token.groupOpen = true;
-            token.groupMatch = ']';
+            token.groupMatch = "]";
             break;
 
         case "{":
             token.groupOpen = true;
-            token.groupMatch = '}';
+            token.groupMatch = "}";
             break;
 
         case ")":
@@ -35,12 +35,12 @@ function determineTokenType(token) {
             token.not = true;
             break;
 
-        case 'and':
+        case "and":
         case "&":
             token.and = true;
             break;
 
-        case 'or':
+        case "or":
         case "|":
             token.or = true;
             break;
@@ -140,10 +140,12 @@ function parseQueryToTokens(query) {
             case "-":
             case "&":
             case "|":
-                tokens.push(determineTokenType({
-                    term: c,
-                    quoted: false
-                }));
+                tokens.push(
+                    determineTokenType({
+                        term: c,
+                        quoted: false
+                    })
+                );
                 pos += 1;
                 break;
 
@@ -162,7 +164,7 @@ function getToken(tokens) {
     const token = tokens.shift();
 
     if (!token) {
-        throw new Error('Ran out of tokens');
+        throw new Error("Ran out of tokens");
     }
 
     return token;
@@ -175,10 +177,10 @@ function applyNegated(node) {
         if (node.right) {
             applyNegated(node.right);
 
-            if (node.operation === 'AND') {
-                node.operation = 'OR';
+            if (node.operation === "AND") {
+                node.operation = "OR";
             } else {
-                node.operation = 'AND';
+                node.operation = "AND";
             }
         }
     } else {
@@ -225,18 +227,18 @@ function buildTreeNode(tokens, left) {
         left = buildNodeWithNegation(tokens);
     }
 
-    let operation = '<implicit>';
+    let operation = "<implicit>";
 
     if (!tokens.length) {
         return left;
     }
 
     if (tokens[0].and || tokens[0].or) {
-        operation = tokens[0].and ? 'AND' : 'OR';
+        operation = tokens[0].and ? "AND" : "OR";
         tokens.shift();
 
         if (!tokens.length) {
-            throw new Error('Encountered operator at end');
+            throw new Error("Encountered operator at end");
         }
     }
 
@@ -255,17 +257,17 @@ function buildTreeNode(tokens, left) {
 
 function buildWildcardRegex(leaf) {
     let term = leaf.term;
-    let startAnchor = '\\b';
-    let endAnchor = '\\b';
+    let startAnchor = "\\b";
+    let endAnchor = "\\b";
 
-    if (term.charAt(0) === '*') {
+    if (term.charAt(0) === "*") {
         term = term.substr(1);
-        startAnchor = '';
+        startAnchor = "";
     }
 
-    if (term.charAt(term.length - 1) === '*') {
+    if (term.charAt(term.length - 1) === "*") {
         term = term.substr(0, term.length - 1);
-        endAnchor = '';
+        endAnchor = "";
     }
 
     term = term
@@ -273,17 +275,17 @@ function buildWildcardRegex(leaf) {
         .map((fragment) => {
             const wordBits = fragment.split(/[^\w']+/);
 
-            while (wordBits[0] === '') {
+            while (wordBits[0] === "") {
                 wordBits.shift();
             }
 
-            while (wordBits[wordBits.length - 1] === '') {
+            while (wordBits[wordBits.length - 1] === "") {
                 wordBits.pop();
             }
 
             return wordBits.join(`[^\\w']+`);
         })
-        .join('[\\w_]*');
+        .join("[\\w_]*");
 
     return `${startAnchor}${term}${endAnchor}`;
 }
@@ -297,7 +299,7 @@ function buildMatcherLeaf(leaf, flags) {
         pattern = buildWildcardRegex(leaf);
     }
 
-    const regexFlags = flags.caseInsensitive ? 'ig' : 'g';
+    const regexFlags = flags.caseInsensitive ? "ig" : "g";
     const regex = new RegExp(pattern, regexFlags);
 
     if (leaf.negated) {
@@ -356,7 +358,7 @@ function buildMatcher(tree, flags) {
         const left = buildMatcher(tree.left, flags);
         const right = buildMatcher(tree.right, flags);
 
-        if (tree.operator === 'OR') {
+        if (tree.operator === "OR") {
             return (input) => left(input) || right(input);
         }
 
