@@ -1,4 +1,4 @@
-/* global ansicolor, document, findJson, localStorage, m, simpleQuery, WebSocket, window */
+/* global ansicolor, document, findJson, jq, localStorage, m, simpleQuery, WebSocket, window */
 
 "use strict";
 
@@ -28,8 +28,9 @@
  *
  * highlightRanges (Array): Matching functions can create or erase this array
  * of indexes. The indexes are used by the view to show highlighted portions.
- * Example: [[1, 3], [7, 9]], which indicates that input.substring(1,3) and
- * input.substring(7,9) should both be highlighted. The numbers are the
+ * Example: [[1, 3], [7, 9, "MATCH"]], which indicates that
+ * input.substring(1,3) and input.substring(7,9) matched and that the second
+ * substring should be replaced with the word "MATCH". The numbers are the
  * start index and the end index (plus one). Only set when there is a filter
  * and it is able to highlight portions of the content. The ranges may
  * overlap and may be out of order.
@@ -405,14 +406,7 @@ class Filter {
                 return event.highlightRanges.length > 0;
             };
         } catch (ignore) {
-            console.log(ignore);
-            this.matcher = (event) => {
-                delete event.highlightRanges;
-
-                return false;
-            };
-            this.valid = false;
-            setTimeout(() => m.redraw());
+            this.buildFailedMatcher();
         }
     }
 
@@ -424,26 +418,60 @@ class Filter {
         };
     }
 
+    buildFailedMatcher() {
+        this.matcher = (event) => {
+            delete event.highlightRanges;
+
+            return false;
+        };
+        this.valid = false;
+        setTimeout(() => m.redraw());
+    }
+
+    buildJqMatcher() {
+        const jqString = this.text.substr(1).trim();
+
+        if (!jqString) {
+            this.buildEmptyMatcher();
+
+            return;
+        }
+
+        try {
+            const ast = jq.parse(jqString);
+            this.matcher = (event) => {
+                if (!event.jsonMatches) {
+                    return false;
+                }
+
+                const matches = [];
+
+                for (const obj of event.jsonMatches) {
+                    this.matchJq(ast, obj, matches);
+                }
+
+                event.highlightRanges = matches;
+
+                return matches.length > 0;
+            };
+        } catch (ignore) {
+            this.buildFailedMatcher();
+        }
+    }
+
     buildRegexpMatcher() {
         const patternText = this.text.substr(1, this.text.length - 2);
         const flags = state.caseInsensitiveSearch ? "gi" : "g";
 
         try {
             const regexp = new RegExp(patternText, flags);
-
             this.matcher = (event) => {
                 event.highlightRanges = this.matchRegexp(regexp, event.content);
 
                 return event.highlightRanges.length > 0;
             };
         } catch (ignore) {
-            this.matcher = (event) => {
-                delete event.highlightRanges;
-
-                return false;
-            };
-            this.valid = false;
-            setTimeout(() => m.redraw());
+            this.buildFailedMatcher();
         }
     }
 
@@ -453,6 +481,19 @@ class Filter {
 
             return event.highlightRanges.length > 0;
         };
+    }
+
+    matchJq(ast, obj, matches) {
+        try {
+            const result = Array.from(jq.evaluate(ast, [obj.parsed]));
+
+            if (result && result.length) {
+                const json = JSON.stringify(result);
+                matches.push([obj.start, obj.end, json.substr(1, json.length - 2)]);
+            }
+        } catch (ignore) {
+            return;
+        }
     }
 
     matchRegexp(needle, haystack) {
@@ -503,6 +544,8 @@ class Filter {
             this.text.length > 2
         ) {
             this.buildRegexpMatcher();
+        } else if (this.text.charAt(0) === '|') {
+            this.buildJqMatcher();
         } else if (state.advancedSearches) {
             this.buildAdvancedTextMatcher();
         } else if (this.text.length) {
@@ -602,12 +645,18 @@ class LogLine {
 
         for (const range of this.consolidateRanges(event.highlightRanges)) {
             elements.push(event.content.substring(start, range[0]));
-            elements.push(
-                m(
-                    "span.Bgc(--highlight-background-color).C(--highlight-text-color)",
-                    event.content.substring(range[0], range[1])
-                )
-            );
+
+            if (range.length > 2) {
+                elements.push(m("span.Bgc(--replace-background-color).C(--replace-text-color)", range[2]));
+            } else {
+                elements.push(
+                    m(
+                        "span.Bgc(--highlight-background-color).C(--highlight-text-color)",
+                        event.content.substring(range[0], range[1])
+                    )
+                );
+            }
+
             start = range[1];
         }
 
@@ -871,15 +920,15 @@ class Toolbar {
         const extra = filter.valid
             ? "Bgc(--button-background-color) Bgc(--hover-button-background-color):h"
             : "Bgc(--invalid-filter-background-color) Bgc(--hover-invalid-filter-background-color):h";
-        const placeholder = state.advancedSearches
-            ? "Search using wildcards and operators or use a /regex/"
-            : "Search for an exact string or use a /regex/";
+        const searchPlaceholder = state.advancedSearches
+            ? "Search using wildcards and operators"
+            : "Search for an exact string";
 
         return m("input", {
             id: 'initialFocus',
             class: `Ff(--monospace) C(--hover-button-text-color) P(4px) Fxg(1) Trsdu(0.2s) ${extra}`,
             value: state.filter,
-            placeholder,
+            placeholder: `${searchPlaceholder}, use a /regex/, or |jq`,
             oninput: (event) => {
                 state.filter = event.target.value;
                 filter.setFilter(event.target.value);
