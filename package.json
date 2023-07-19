@@ -1,6 +1,6 @@
 {
     "name": "@fidian/log-viewer",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "description": "Watch logs in your browser with live updates and support for filtering.",
     "license": "MIT",
     "bin": {
