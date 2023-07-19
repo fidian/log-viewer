@@ -1,5 +1,39 @@
-/* global ansicolor, document, localStorage, m, WebSocket, window */
+/* global ansicolor, document, findJson, localStorage, m, simpleQuery, WebSocket, window */
+
 "use strict";
+
+/* Event properties
+ *
+ * id (number): Added automatically when receiving the event. Not generated
+ * by the server. Used for keying objects for better tracking of DOM elements.
+ * Always set.
+ *
+ * type (string): Either "system" or "line", representing a system-level
+ * message or a log line, respectively. Always set.
+ *
+ * when (number): When the log line was ingested by the server. This is a time
+ * in milliseconds, which is the same as "Date.now()". Always set.
+ *
+ * content (string): Initially the log line from the server, without the
+ * trailing newline. Upon receipt, ANSI sequences are stripped. Always set.
+ *
+ * contentAnsi (string): If ANSI sequences are detected in the original
+ * content, the original version of the content is stored here before the
+ * "content" property is cleansed. Only set when the original content had ANSI.
+ *
+ * jsonMatches (Array/null): When the cleansed content has embedded JSON
+ * objects or arrays, each parsable object and array are listed as an object in
+ * this array. The object has "start" for the start byte, "end" for the end
+ * byte (plus one), and "parsed" for the parsed JSON object. Always set.
+ *
+ * highlightRanges (Array): Matching functions can create or erase this array
+ * of indexes. The indexes are used by the view to show highlighted portions.
+ * Example: [[1, 3], [7, 9]], which indicates that input.substring(1,3) and
+ * input.substring(7,9) should both be highlighted. The numbers are the
+ * start index and the end index (plus one). Only set when there is a filter
+ * and it is able to highlight portions of the content. The ranges may
+ * overlap and may be out of order.
+ */
 
 class App {
     view() {
@@ -51,10 +85,8 @@ class Bridge {
     }
 
     openConnection() {
-        console.log("Attempting to open a socket");
         this.webSocket = new WebSocket(this.url);
         this.webSocket.onopen = () => {
-            console.log("Socket opened");
             this.open = true;
 
             // Reset files on open because it looks better having logs in the
@@ -67,7 +99,10 @@ class Bridge {
             try {
                 this.receiveMessage(JSON.parse(event.data));
             } catch (ignore) {
-                console.log("Invalid JSON payload from WebSocket:", event.data);
+                console.debug(
+                    "Invalid JSON payload from WebSocket:",
+                    event.data
+                );
             }
         };
         this.webSocket.onerror = (err) => {
@@ -76,9 +111,7 @@ class Bridge {
         };
         this.webSocket.onclose = () => {
             this.open = false;
-            console.log("Socket closed");
             this.delay = Math.min(Math.floor(this.delay * 1.5), 30000);
-            console.log(`Delaying ${this.delay}ms`);
             this.rerender();
             setTimeout(() => {
                 this.openConnection();
@@ -122,13 +155,14 @@ class Bridge {
 
         for (const event of events) {
             event.id = this.uniqueId;
+            this.uniqueId += 1;
 
             if (ansicolor.isEscaped(event.content)) {
                 event.contentAnsi = event.content;
                 event.content = ansicolor.strip(event.contentAnsi);
             }
 
-            this.uniqueId += 1;
+            event.jsonMatches = findJson(event.content);
         }
 
         arr.push(...events);
@@ -203,12 +237,28 @@ class ConfigPanel {
                 },
                 [
                     this.viewPanelClose(),
+                    this.viewAdvancedSearch(),
                     this.viewCaseInsensitiveSearch(),
                     this.viewTimes(),
                     this.viewWrap(),
                     this.viewAnsi()
                 ]
             )
+        );
+    }
+
+    viewAdvancedSearch() {
+        return m(
+            "div",
+            m(Toggle, {
+                checked: state.advancedSearches,
+                label: "Use advanced searches with wildcards and operators",
+                onclick: () => {
+                    state.advancedSearches = !state.advancedSearches;
+
+                    return false;
+                }
+            })
         );
     }
 
@@ -324,7 +374,7 @@ class DisconnectedModal {
 
 class Filter {
     constructor() {
-        this.text = '';
+        this.text = "";
         this.valid = true;
         this.buildEmptyMatcher();
     }
@@ -335,6 +385,35 @@ class Filter {
         }
 
         return events.filter(this.matcher);
+    }
+
+    buildAdvancedTextMatcher() {
+        if (this.text.trim() === "") {
+            this.buildEmptyMatcher();
+
+            return;
+        }
+
+        try {
+            const query = simpleQuery(this.text, {
+                caseInsensitive: state.caseInsensitiveSearch,
+                returnPositions: true
+            });
+            this.matcher = (event) => {
+                event.highlightRanges = query(event.content);
+
+                return event.highlightRanges.length > 0;
+            };
+        } catch (ignore) {
+            console.log(ignore);
+            this.matcher = (event) => {
+                delete event.highlightRanges;
+
+                return false;
+            };
+            this.valid = false;
+            setTimeout(() => m.redraw());
+        }
     }
 
     buildEmptyMatcher() {
@@ -370,7 +449,7 @@ class Filter {
 
     buildTextMatcher() {
         this.matcher = (event) => {
-            event.highlightRanges = this.matchText(this.text.toLowerCase(), event.content.toLowerCase());
+            event.highlightRanges = this.matchText(this.text, event.content);
 
             return event.highlightRanges.length > 0;
         };
@@ -385,7 +464,7 @@ class Filter {
                 return [];
             }
 
-            matches.push(result.index, needle.lastIndex);
+            matches.push([result.index, needle.lastIndex]);
             result = needle.exec(haystack);
         }
 
@@ -403,7 +482,7 @@ class Filter {
         let index = haystack.indexOf(needle);
 
         while (index >= 0) {
-            matches.push(index, index + needle.length);
+            matches.push([index, index + needle.length]);
             start = index + needle.length + 1;
             index = haystack.indexOf(needle, start);
         }
@@ -418,8 +497,14 @@ class Filter {
     }
 
     updateFilter() {
-        if (this.text.charAt(0) === '/' && this.text.charAt(this.text.length - 1) === '/' && this.text.length > 2) {
+        if (
+            this.text.charAt(0) === "/" &&
+            this.text.charAt(this.text.length - 1) === "/" &&
+            this.text.length > 2
+        ) {
             this.buildRegexpMatcher();
+        } else if (state.advancedSearches) {
+            this.buildAdvancedTextMatcher();
         } else if (this.text.length) {
             this.buildTextMatcher();
         } else {
@@ -429,6 +514,23 @@ class Filter {
 }
 
 class LogLine {
+    consolidateRanges(ranges) {
+        ranges.sort((a, b) => a[0] - b[0]);
+        let last = ranges.unshift();
+        const result = [last];
+
+        for (const range of ranges) {
+            if (last[0] <= range[0] && last[1] >= range[0]) {
+                last[1] = Math.max(last[1], range[1]);
+            } else {
+                last = range;
+                result.push(last);
+            }
+        }
+
+        return ranges;
+    }
+
     view(vnode) {
         const event = vnode.attrs.event;
 
@@ -454,12 +556,12 @@ class LogLine {
             elem += ".Whs(p)";
         }
 
-        if (state.showAnsi && event.contentAnsi) {
-            return m(elem, this.viewContentAnsi(event));
-        }
-
         if (event.highlightRanges) {
             return m(elem, this.viewHighlight(event));
+        }
+
+        if (state.showAnsi && event.contentAnsi) {
+            return m(elem, this.viewContentAnsi(event));
         }
 
         return m(elem, event.content);
@@ -497,28 +599,19 @@ class LogLine {
     viewHighlight(event) {
         let start = 0;
         const elements = [];
-        let nextIsText = true;
-        const append = (segment) => {
-            if (nextIsText) {
-                elements.push(segment);
-            } else {
-                elements.push(
-                    m(
-                        "span.Bgc(--highlight-background-color).C(--highlight-text-color)",
-                        segment
-                    )
-                );
-            }
 
-            nextIsText = !nextIsText;
-        };
-
-        for (const index of event.highlightRanges) {
-            append(event.content.substring(start, index));
-            start = index;
+        for (const range of this.consolidateRanges(event.highlightRanges)) {
+            elements.push(event.content.substring(start, range[0]));
+            elements.push(
+                m(
+                    "span.Bgc(--highlight-background-color).C(--highlight-text-color)",
+                    event.content.substring(range[0], range[1])
+                )
+            );
+            start = range[1];
         }
 
-        append(event.content.substring(start, event.content.length));
+        elements.push(event.content.substring(start, event.content.length));
 
         return elements;
     }
@@ -586,6 +679,14 @@ class Logs {
 class State {
     constructor() {
         this.atBottom = true;
+    }
+
+    get advancedSearches() {
+        return this.readBoolean("advancedSearches");
+    }
+
+    set advancedSearches(value) {
+        this.writeBoolean("advancedSearches", value);
     }
 
     get caseInsensitiveSearch() {
@@ -767,12 +868,18 @@ class Toolbar {
     }
 
     viewFilter() {
-        const extra = filter.valid ? 'Bgc(--button-background-color) Bgc(--hover-button-background-color):h' : 'Bgc(--invalid-filter-background-color) Bgc(--hover-invalid-filter-background-color):h';
+        const extra = filter.valid
+            ? "Bgc(--button-background-color) Bgc(--hover-button-background-color):h"
+            : "Bgc(--invalid-filter-background-color) Bgc(--hover-invalid-filter-background-color):h";
+        const placeholder = state.advancedSearches
+            ? "Search using wildcards and operators or use a /regex/"
+            : "Search for an exact string or use a /regex/";
 
         return m("input", {
+            id: 'initialFocus',
             class: `Ff(--monospace) C(--hover-button-text-color) P(4px) Fxg(1) Trsdu(0.2s) ${extra}`,
             value: state.filter,
-            placeholder: "Search for text or use a /regex/",
+            placeholder,
             oninput: (event) => {
                 state.filter = event.target.value;
                 filter.setFilter(event.target.value);
@@ -811,4 +918,5 @@ window.addEventListener("load", () => {
     bridge = new Bridge();
     bridge.watching.add(state.filename);
     m.mount(document.body, App);
+    setTimeout(() => document.getElementById('initialFocus').focus());
 });
