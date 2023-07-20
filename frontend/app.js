@@ -328,7 +328,7 @@ class ConfigPanel {
             "div",
             m(Toggle, {
                 checked: state.caseInsensitiveSearch,
-                label: "Case insensitive searches",
+                label: "Case insensitive searches (not jq filters)",
                 onclick: () => {
                     state.caseInsensitiveSearch = !state.caseInsensitiveSearch;
                     filter.updateFilter();
