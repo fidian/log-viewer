@@ -1,4 +1,4 @@
 // Bundled with bundlejs.com
 // Use this file as the input and save the output as jq.min.js
-import * as jq from "@jq-tools/jq@0.0.9";
+import * as jq from "@jq-tools/jq@0.0.10";
 window.jq = jq;
