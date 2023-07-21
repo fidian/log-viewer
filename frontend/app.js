@@ -83,6 +83,7 @@ class Bridge {
         this.openConnection();
         this.delay = 500;
         this.uniqueId = 0;
+        this.pingTimeout = null;
     }
 
     adjustBufferLines(lines) {
@@ -97,6 +98,7 @@ class Bridge {
         this.webSocket = new WebSocket(this.url);
         this.webSocket.onopen = () => {
             this.open = true;
+            this.pingStart();
 
             // Reset files on open because it looks better having logs in the
             // background when trying to reconnect to the server.
@@ -120,12 +122,33 @@ class Bridge {
         };
         this.webSocket.onclose = () => {
             this.open = false;
+            this.pingClear();
             this.delay = Math.min(Math.floor(this.delay * 1.5), 30000);
             this.rerender();
             setTimeout(() => {
                 this.openConnection();
             }, this.delay);
         };
+    }
+
+    pingClear() {
+        if (this.pingTimeout) {
+            clearTimeout(this.pingTimeout);
+            this.pingTimeout = null;
+        }
+    }
+
+    pingStart() {
+        this.pingClear();
+
+        if (state.pingServer > 0) {
+            this.pingTimeout = setTimeout(() => {
+                this.pingTimeout = null;
+                m.request(`?ping=${Date.now()}`).then(() => {
+                    this.pingStart();
+                });
+            }, state.pingServer * 1000);
+        }
     }
 
     receiveMessage(message) {
@@ -251,7 +274,8 @@ class ConfigPanel {
                     this.viewTimes(),
                     this.viewWrap(),
                     this.viewAnsi(),
-                    this.viewBufferLines()
+                    this.viewBufferLines(),
+                    this.viewPingSeconds()
                 ]
             )
         );
@@ -339,6 +363,28 @@ class ConfigPanel {
         );
     }
 
+    viewPingSeconds() {
+        return m(
+            "div",
+            m("label.D(f).Jc(spb)", [
+                m(
+                    "span.Mend(4px)",
+                    "Time to ping the server, in seconds (0 to disable)"
+                ),
+                m("input.W(5em).Ta(end)", {
+                    value: state.pingServer,
+                    type: "number",
+                    oninput: (event) => {
+                        state.pingServer = +event.target.value;
+                        bridge.pingStart();
+
+                        return false;
+                    }
+                })
+            ])
+        );
+    }
+
     viewTimes() {
         return m(
             "div",
@@ -423,7 +469,7 @@ class Filter {
             let text = this.text;
 
             if (text.match(/[a-z0-9]$/i)) {
-                text += '*';
+                text += "*";
             }
 
             const query = simpleQuery(text, {
@@ -807,6 +853,14 @@ class State {
 
     set filename(value) {
         localStorage.setItem("filename", value);
+    }
+
+    get pingServer() {
+        return +localStorage.getItem("pingServer") || 0;
+    }
+
+    set pingServer(value) {
+        localStorage.setItem("pingServer", value.toString());
     }
 
     get showAnsi() {
