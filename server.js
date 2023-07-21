@@ -34,13 +34,6 @@ Options:
                     starting with ".", it is relative to the current
                     working directory. Otherwise it defaults to the
                     script's folder. [default: frontend]
-    --periodic-recheck=MIN
-                    Specifies the amount of time between periodic rechecks
-                    of log files for additional logs. Sometimes, during rapid
-                    changes, not enough "change" events are emitted or the
-                    data isn't flushed to disk, so they don't appear in the
-                    logs. Set this to 0 to disable periodic rechecks.
-                    [default: 1]
     --poll          Enable polling instead of monitoring filesystem events.
     --port=PORT     Specify the HTTP server's port. If proxied, the proxy must
                     support upgrading to a WebSocket. [default: 8888]
@@ -58,7 +51,7 @@ if (!args["--quiet"]) {
     console.log(`Frontend file path:: ${dirPath}`);
 }
 
-const tailTracker = new TailTracker(args["--expire"], args["--buffer"], args["--periodic-recheck"]);
+const tailTracker = new TailTracker(args["--expire"], args["--buffer"]);
 const watcher = new Watcher(tailTracker, args["--quiet"], args["--poll"]);
 watcher.watch(args.FILE, args["--poll"], tailTracker);
 const server = httpServer.makeServer(dirPath, args["--quiet"]);
