@@ -69,3 +69,6 @@ You could possibly also use shell expansion combined with glob escaping to make 
 
 With this, the shell will expand the one argument into three paths, resulting into the same command as the previous example.
 
+* **How can I keep the logs working in Chrome?**
+
+Sometimes, the log viewer will stop getting WebSocket updates and may need to be refreshed in order to see current logs again. This is probably because Chrome will save memory by suspending tabs when they are not active. To fix this, go to `chrome://settings/performance` and add the log viewer site to the exception list.
