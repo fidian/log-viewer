@@ -687,6 +687,10 @@ class LogLine {
             return m(elem, this.viewContentAnsi(event));
         }
 
+        if (!event.content) {
+            return m(elem, '\n');
+        }
+
         return m(elem, event.content);
     }
 
@@ -756,7 +760,7 @@ class LogLine {
         }
 
         return m(
-            "div.Fxs(0).Px(4px).C(--timestamp-text-color)",
+            "div.Fxs(0).Px(4px).C(--timestamp-text-color).Us(n)",
             this.viewDate(event.when)
         );
     }
