@@ -18,6 +18,7 @@ This is a quick and easy method to allow people to view logs without granting th
 
 ## UI Features
 
+* Automatic scrolling on new content when viewing the end of the log.
 * Allows easy log file picking and remembers preferences in LocalStorage.
 * Log lines can wrap to fit the screen or not wrap and can be seen via scrolling.
 * Supports advanced wildcard searches, which allow for wildcards and exact strings.
