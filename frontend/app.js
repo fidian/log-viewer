@@ -508,7 +508,9 @@ class Filter {
         const jqString = this.text.substr(1).trim();
 
         if (!jqString) {
-            this.buildEmptyMatcher();
+            this.matcher = (event) => {
+                return !event.jsonMatches;
+            };
 
             return;
         }

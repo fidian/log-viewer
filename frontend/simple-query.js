@@ -61,7 +61,7 @@ function readString(query, pos) {
             term: result,
             quoted: true
         }),
-        pos: pos
+        pos: pos + 1
     };
 }
 
@@ -270,7 +270,7 @@ function buildMatcherLeaf(leaf, flags) {
     let pattern;
 
     if (leaf.quoted) {
-        pattern = "\\b" + leaf.terms.join("[^\\w']+") + "\\b";
+        pattern = leaf.term.replace(/\W/g, '\\$&');
     } else {
         pattern = buildWildcardRegex(leaf);
     }
