@@ -22,9 +22,16 @@ This is a quick and easy method to allow people to view logs without granting th
 * Allows easy log file picking and remembers preferences in LocalStorage.
 * Log lines can wrap to fit the screen or not wrap and can be seen via scrolling.
 * Supports advanced wildcard searches, which allow for wildcards and exact strings.
+    * `test*` matches any word starting with "test": test, tester, testing.
+    * `*hi*` matches any word that contains "hi": thing, shine, high.
+    * Parenthesis are supported.
+    * Allows operations `and`, `or`, and `not`; operator precedence is from left to right, so use parenthesis if concerned.
+    * Multiple words will presume they are joined by `and` unless otherwise specified.
 * Regular expressions can be used by simply enclosing the expression in slashes, like `/Error:/`.
+    * The regular expression is not complete until the final `/` at the end.
+    * Be careful when making an expression because you might create one that locks up the browser.
 * Search terms and matching portions from regular expressions are highlighted.
-* Searches can be made insensitive.
+* Searches can be made insensitive through an option.
 * When a log line contains a JSON object or array, [`jq`](https://jqlang.github.io/jq/manual/) syntax can pull out results. Log lines are replaced with the result of the operation. To enable `jq` syntax, start the query with a pipe, such as `|.[2]`. A pipe followed by nothing else will produce a search for log lines that do not contain JSON.
 * Shows filesystem events in the logs, such as when a logfile is added, truncated, or removed.
 * Uses a WebSocket to enable realtime updates.
