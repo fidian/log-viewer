@@ -1,10 +1,62 @@
 # Log Viewer
 
-This is a simple way to view logs in a browser. By pointing the script at a series of paths or globs, you are able to then serve these files to your browser. When you load the page, the logs are searchable and a history is kept when toggling between different files.
+This is a simple tool to follow multiple log files in a browser. By pointing the script at a series of paths or globs, you are able to then serve these files to your browser. When you load the page, the logs are searchable and a history is kept when toggling between different files.
 
 This is a quick and easy method to allow people to view logs without granting them the permission to execute commands on a server.
 
-![Screenshot](screenshot.png)
+![Screenshot](images/screenshot.png)
+
+## API Features
+
+* Monitors globs for new files and will automatically start following them.
+* Preserves a number of lines and sends them to connected UIs without rereading the original logfiles.
+* When a file is truncated or deleted, keeps previous lines for a configurable amount of time.
+* Supports watching for filesystem events and polling.
+* Does not spawn additional commands to monitor files.
+* Exposes data through a WebSocket.
+* Serves a folder for the UI. Does not support file paths, so retrieving `/index.html` is the same as `/a/fake/folder/index.html`. This is to eliminate the possibility of security concerns, such as `/../../../etc/passwd`.
+
+## UI Features
+
+* Allows easy log file picking and remembers preferences in LocalStorage.
+* Log lines can wrap to fit the screen or not wrap and can be seen via scrolling.
+* Supports advanced wildcard searches, which allow for wildcards and exact strings.
+* Regular expressions can be used by simply enclosing the expression in slashes, like `/Error:/`.
+* Search terms and matching portions from regular expressions are highlighted.
+* Searches can be made insensitive.
+* When a log line contains a JSON object or array, [`jq`](https://jqlang.github.io/jq/manual/) syntax can pull out results. Log lines are replaced with the result of the operation. To enable `jq` syntax, start the query with a pipe, such as `|.[2]`. A pipe followed by nothing else will produce a search for log lines that do not contain JSON.
+* Shows filesystem events in the logs, such as when a logfile is added, truncated, or removed.
+* Uses a WebSocket to enable realtime updates.
+* Can show log ingestion times - the timestap when the server found the line in the logfile. Copying and pasting from logs will not copy this additional data.
+* Detects ANSI escape sequences and will show the colorful output. Whenever a search is being applied, the color is removed before searching.
+* Configurable scrollback buffer size.
+* Able to ping the server in a configurable amount of time in order to keep a session alive.
+
+## Screenshots
+
+Advanced searches
+
+![images/advanced-searches.png]
+
+Regular expressions
+
+![images/regexp.png]
+
+Filesystem events
+
+![images/events.png]
+
+ANSI color output and the options menu.
+
+![images/ansi-and-options.png]
+
+Before a `jq` filter and after a `jq` filter.
+
+![images/before-jq.png] ![images/after-jq.png]
+
+Wrapping long lines and showing the log ingestion timestamp.
+
+![images/wrap-and-timestamp.png]
 
 ## Installation
 
@@ -12,7 +64,7 @@ This is best installed globally.
 
     npm install -g @fidian/log-viewer
 
-## Usage
+## Usage of Server
 
 Start the server by specifying the filenames you want to monitor. Globs are supported. If a file doesn't exist yet, but will in the future, this tool will pick them up when they appear.
 
@@ -26,6 +78,8 @@ There are only a handful of options, all are documented with `log-viewer --help`
 * `--poll` - Switch to polling instead of using filesystem events. Useful for network mounted drives.
 * `--port=PORT` - Specify a different port for listening.
 * `--quiet` - Suppress log messages. Errors are still printed to the screen.
+
+From there, go to [http://localhost:8888/] to view the UI.
 
 ## Problems?
 
