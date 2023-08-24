@@ -36,27 +36,27 @@ This is a quick and easy method to allow people to view logs without granting th
 
 Advanced searches
 
-![images/advanced-searches.png]
+![Advanced searches](images/advanced-searches.png)
 
 Regular expressions
 
-![images/regexp.png]
+![Regular expressions](images/regexp.png)
 
 Filesystem events
 
-![images/events.png]
+![Filesystem events](images/events.png)
 
 ANSI color output and the options menu.
 
-![images/ansi-and-options.png]
+![ANSI color output and the options menu](images/ansi-and-options.png)
 
 Before a `jq` filter and after a `jq` filter.
 
-![images/before-jq.png] ![images/after-jq.png]
+![Before a jq filter](images/before-jq.png) ![After a jq filter](images/after-jq.png)
 
-Wrapping long lines and showing the log ingestion timestamp.
+Wrapping long lines and showing the log ingestion timestamps.
 
-![images/wrap-and-timestamp.png]
+![Wrapping long lines and showing log ingestion timestamps](images/wrap-and-timestamp.png)
 
 ## Installation
 
