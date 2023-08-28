@@ -87,7 +87,7 @@ There are only a handful of options, all are documented with `log-viewer --help`
 * `--port=PORT` - Specify a different port for listening.
 * `--quiet` - Suppress log messages. Errors are still printed to the screen.
 
-From there, go to [http://localhost:8888/] to view the UI.
+From there, go to [http://localhost:8888/](http://localhost:8888) to view the UI.
 
 ## Problems?
 
