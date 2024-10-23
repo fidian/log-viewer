@@ -2,3 +2,4 @@ no ansi
 [31myes ansi - red[39m
 white [34mblue[39m [1m[32mGREEN[22;39m white
 String {"a":"b", "c\"": "d}]"} and ["a",2] array stuff
+{"json":true,"whatever":"you like"}

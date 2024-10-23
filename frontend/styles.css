@@ -18,8 +18,8 @@
     --toggle-checkmark-color: #ffffff;
     --highlight-background-color: yellow;
     --highlight-text-color: black;
-    --replace-background-color: green;
-    --replace-text-color: black;
+    --replace-background-color: #013701;
+    --replace-text-color: white;
     --invalid-filter-background-color: #470000;
     --hover-invalid-filter-background-color: #560000;
 }
